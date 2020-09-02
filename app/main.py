@@ -105,6 +105,7 @@ def serve_layout():
     init_summ_r = requests.post(base_url + 'sampling_sites', params={'dataset_id': init_dataset_id, 'compression': 'zstd'})
 
     init_summ = orjson.loads(dc.decompress(init_summ_r.content))
+    init_summ = [s for s in init_summ if (pd.Timestamp(s['stats']['to_date']) > start_date) and (pd.Timestamp(s['stats']['from_date']) < max_date)]
 
     init_sites = [{'label': s['ref'], 'value': s['site_id']} for s in init_summ]
 
@@ -304,15 +305,17 @@ def update_dataset_id(features, parameters, methods, processing_codes, owners, a
 
 @app.callback(
     Output('sites_summ', 'children'),
-    [Input('dataset_id', 'children')])
-def update_summ_data(dataset_id):
+    [Input('dataset_id', 'children'), Input('date_sel', 'start_date'), Input('date_sel', 'end_date')])
+def update_summ_data(dataset_id, start_date, end_date):
     if dataset_id is None:
         print('No new sites_summ')
     else:
         summ_r = requests.post(base_url + 'sampling_sites', params={'dataset_id': dataset_id, 'compression': 'zstd'})
 
         dc = zstd.ZstdDecompressor()
-        summ_json = dc.decompress(summ_r.content).decode()
+        summ_data1 = orjson.loads(dc.decompress(summ_r.content).decode())
+        summ_data2 = [s for s in summ_data1 if (pd.Timestamp(s['stats']['to_date']) > pd.Timestamp(start_date)) and (pd.Timestamp(s['stats']['from_date']) < pd.Timestamp(end_date))]
+        summ_json = orjson.dumps(summ_data2).decode()
 
         return summ_json
 
