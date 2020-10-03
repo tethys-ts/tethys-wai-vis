@@ -219,6 +219,13 @@ def serve_layout():
                 ),
             config={"displaylogo": False}
             ),
+        html.A(
+            'Download Time Series Data',
+            id='download-tsdata',
+            download="tsdata.csv",
+            href="",
+            target="_blank",
+            style={'margin': 50}),
         dash_table.DataTable(
             id='summ_table',
             columns=[{"name": i, "id": i, 'deletable': True} for i in init_table[0].keys()],
@@ -230,14 +237,8 @@ def serve_layout():
                 'whiteSpace': 'normal'
             }
             )
-        # html.A(
-        #     'Download Time Series Data',
-        #     id='download-tsdata',
-        #     download="tsdata.csv",
-        #     href="",
-        #     target="_blank",
-        #     style={'margin': 50})
     ], className='six columns', style={'margin': 10, 'height': 900}),
+    html.Div(id='ts_data', style={'display': 'none'}),
     html.Div(id='datasets', style={'display': 'none'}, children=orjson.dumps(datasets).decode()),
     html.Div(id='dataset_id', style={'display': 'none'}, children=init_dataset_id),
     html.Div(id='sites_summ', style={'display': 'none'}, children=orjson.dumps(init_summ).decode())
@@ -408,9 +409,24 @@ def update_table(sites_summ, sites, selectedData, clickData):
 
 
 @app.callback(
-    Output('selected-data', 'figure'),
+    Output('ts_data', 'children'),
     [Input('sites', 'value'), Input('date_sel', 'start_date'), Input('date_sel', 'end_date'), Input('dataset_id', 'children')])
-def display_data(sites, start_date, end_date, dataset_id):
+def get_data(sites, start_date, end_date, dataset_id):
+    if dataset_id:
+        if sites:
+            ts_r = requests.get(base_url + 'time_series_results', params={'dataset_id': dataset_id, 'site_id': sites, 'compression': 'zstd', 'from_date': start_date+'T00:00', 'to_date': end_date+'T00:00'})
+            dc = zstd.ZstdDecompressor()
+            ts1 = dc.decompress(ts_r.content).decode()
+
+            return ts1
+
+
+
+@app.callback(
+    Output('selected-data', 'figure'),
+    [Input('ts_data', 'children')],
+    [State('sites', 'value'), State('dataset_id', 'children'), State('date_sel', 'start_date'), State('date_sel', 'end_date')])
+def display_data(ts_data, sites, dataset_id, start_date, end_date):
 
     base_dict = dict(
             data = [dict(x=0, y=0)],
@@ -427,9 +443,7 @@ def display_data(sites, start_date, end_date, dataset_id):
     if not dataset_id:
         return base_dict
 
-    ts_r = requests.get(base_url + 'time_series_results', params={'dataset_id': dataset_id, 'site_id': sites, 'compression': 'zstd', 'from_date': start_date+'T00:00', 'to_date': end_date+'T00:00'})
-    dc = zstd.ZstdDecompressor()
-    ts1 = orjson.loads(dc.decompress(ts_r.content))
+    ts1 = orjson.loads(ts_data)
 
     x1 = [t['from_date'] for t in ts1]
     y1 = [t['result'] for t in ts1]
@@ -466,9 +480,35 @@ def update_table(dataset_id, datasets):
 
         return [dataset_table1]
 
+
+@app.callback(
+    Output('download-tsdata', 'href'),
+    [Input('ts_data', 'children')],
+    [State('sites', 'value'), State('dataset_id', 'children')])
+def download_tsdata(ts_data, sites, dataset_id):
+    if dataset_id:
+        if sites:
+            ts_data1 = pd.DataFrame(orjson.loads(ts_data))
+            ts_data1['from_date'] = pd.to_datetime(ts_data1['from_date'])
+
+            csv_string = ts_data1.to_csv(index=False, encoding='utf-8')
+            csv_string = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string)
+            return csv_string
+
+
+# @app.callback(
+#     Output('download-summ', 'href'),
+#     [Input('summ_data', 'children')])
+# def download_summ(summ_data):
+#     new_summ = pd.read_json(summ_data, orient='split')[table_cols]
+#
+#     csv_string = new_summ.to_csv(index=False, encoding='utf-8')
+#     csv_string = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string)
+#     return csv_string
+
+
 # if __name__ == '__main__':
-#  # 	app.run_server(debug=True, host='0.0.0.0', port=8050)
-# 	app.run_server(debug=True)
+#     app.run_server(debug=True, host='0.0.0.0', port=8060)
 
 
 @server.route("/wai-vis")
