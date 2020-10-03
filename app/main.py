@@ -19,7 +19,7 @@ pd.options.display.max_columns = 10
 external_stylesheets = ['https://codepen.io/plotly/pen/EQZeaW.css']
 
 server = flask.Flask(__name__)
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server)
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server,  url_base_pathname = '/')
 
 # app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server)
 # server = app.server
@@ -507,14 +507,10 @@ def download_tsdata(ts_data, sites, dataset_id):
 #     return csv_string
 
 
-# if __name__ == '__main__':
-#     app.run_server(debug=True, host='0.0.0.0', port=8060)
+if __name__ == '__main__':
+    server.run(debug=True, host='0.0.0.0', port=80)
 
 
-@server.route("/wai-vis")
-def my_dash_app():
-    return app.index()
-
-
-
-
+# @server.route("/wai-vis")
+# def my_dash_app():
+#     return app.index()

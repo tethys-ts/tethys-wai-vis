@@ -1,19 +1,19 @@
 scheduling:
   delay: 12
-  every: hour
-  at: ':01'
+  # every: hour
+  # at: ':01'
 
 from_mod_date: '2020-09-30T00:00Z'
 
 datasets:
-  # - feature: atmosphere
-  #   parameter: precipitation
-  #   method: sensor_recording
-  #   processing_code: quality_controlled_data
-  #   owner: ECan
-  #   aggregation_statistic: cumulative
-  #   frequency_interval: '1H'
-  #   utc_offset: '0H'
+  - feature: atmosphere
+    parameter: precipitation
+    method: sensor_recording
+    processing_code: raw_data
+    owner: ECan
+    aggregation_statistic: cumulative
+    frequency_interval: '1H'
+    utc_offset: '0H'
   #
   # - feature: waterway
   #   parameter: streamflow
@@ -23,7 +23,7 @@ datasets:
   #   aggregation_statistic: mean
   #   frequency_interval: '1H'
   #   utc_offset: '0H'
-  #
+  # #
   # - feature: groundwater
   #   parameter: groundwater_depth
   #   method: sensor_recording
@@ -42,33 +42,6 @@ datasets:
   #   frequency_interval: '1H'
   #   utc_offset: '0H'
 
-  # - feature: waterway
-  #   parameter: streamflow
-  #   method: sensor_recording
-  #   processing_code: raw_data
-  #   owner: ECan
-  #   aggregation_statistic: mean
-  #   frequency_interval: '1H'
-  #   utc_offset: '0H'
-
-  - feature: waterway
-    parameter: gage_height
-    method: forecast
-    processing_code: high_flow_YR_ECMWF_9km_forecast
-    owner: ECan
-    aggregation_statistic: mean
-    frequency_interval: '1H'
-    utc_offset: '0H'
-
-  - feature: atmosphere
-    parameter: precipitation
-    method: forecast
-    processing_code: YR_ECMWF_9km_forecast
-    owner: MET_Norway
-    aggregation_statistic: cumulative
-    frequency_interval: '1H'
-    utc_offset: '0H'
-
   - feature: waterway
     parameter: streamflow
     method: sensor_recording
@@ -78,14 +51,41 @@ datasets:
     frequency_interval: '1H'
     utc_offset: '0H'
 
-sites: ['217810', '227810', '66401', '66402']
+  # - feature: waterway
+  #   parameter: gage_height
+  #   method: forecast
+  #   processing_code: high_flow_YR_ECMWF_9km_forecast
+  #   owner: ECan
+  #   aggregation_statistic: mean
+  #   frequency_interval: '1H'
+  #   utc_offset: '0H'
+  #
+  # - feature: atmosphere
+  #   parameter: precipitation
+  #   method: forecast
+  #   processing_code: YR_ECMWF_9km_forecast
+  #   owner: MET_Norway
+  #   aggregation_statistic: cumulative
+  #   frequency_interval: '1H'
+  #   utc_offset: '0H'
+  #
+  # - feature: waterway
+  #   parameter: streamflow
+  #   method: sensor_recording
+  #   processing_code: raw_data
+  #   owner: ECan
+  #   aggregation_statistic: mean
+  #   frequency_interval: '1H'
+  #   utc_offset: '0H'
 
-remotes:
-    - connection_config:
-        service_name: 's3'
-        endpoint_url: https://s3.us-west-002.backblazeb2.com
-        aws_access_key_id: 00203ccd53f4ded0000000012
-        aws_secret_access_key: K002Eb/ueEo/6Ru9WJJnD9QQaAkNXEw
-      bucket: waimak-forecast
-      delimiter: /
-      scheduling: hourly
+# sites: ['217810', '227810', '66401', '66402']
+
+# remotes:
+#     - connection_config:
+#         service_name: 's3'
+#         endpoint_url: https://s3.us-west-002.backblazeb2.com
+#         aws_access_key_id: 00203ccd53f4ded0000000012
+#         aws_secret_access_key: K002Eb/ueEo/6Ru9WJJnD9QQaAkNXEw
+#       bucket: waimak-forecast
+#       delimiter: /
+#       scheduling: hourly
