@@ -16,10 +16,10 @@ import flask
 
 pd.options.display.max_columns = 10
 
-external_stylesheets = ['https://codepen.io/plotly/pen/EQZeaW.css']
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 server = flask.Flask(__name__)
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server)
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server,  url_base_pathname = '/')
 
 # app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server)
 # server = app.server
@@ -105,6 +105,7 @@ def serve_layout():
     init_summ_r = requests.post(base_url + 'sampling_sites', params={'dataset_id': init_dataset_id, 'compression': 'zstd'})
 
     init_summ = orjson.loads(dc.decompress(init_summ_r.content))
+    init_summ = [s for s in init_summ if (pd.Timestamp(s['stats']['to_date']) > start_date) and (pd.Timestamp(s['stats']['from_date']) < max_date)]
 
     init_sites = [{'label': s['ref'], 'value': s['site_id']} for s in init_summ]
 
@@ -218,6 +219,13 @@ def serve_layout():
                 ),
             config={"displaylogo": False}
             ),
+        html.A(
+            'Download Time Series Data',
+            id='download-tsdata',
+            download="tsdata.csv",
+            href="",
+            target="_blank",
+            style={'margin': 50}),
         dash_table.DataTable(
             id='summ_table',
             columns=[{"name": i, "id": i, 'deletable': True} for i in init_table[0].keys()],
@@ -229,14 +237,8 @@ def serve_layout():
                 'whiteSpace': 'normal'
             }
             )
-        # html.A(
-        #     'Download Time Series Data',
-        #     id='download-tsdata',
-        #     download="tsdata.csv",
-        #     href="",
-        #     target="_blank",
-        #     style={'margin': 50})
     ], className='six columns', style={'margin': 10, 'height': 900}),
+    html.Div(id='ts_data', style={'display': 'none'}),
     html.Div(id='datasets', style={'display': 'none'}, children=orjson.dumps(datasets).decode()),
     html.Div(id='dataset_id', style={'display': 'none'}, children=init_dataset_id),
     html.Div(id='sites_summ', style={'display': 'none'}, children=orjson.dumps(init_summ).decode())
@@ -304,15 +306,17 @@ def update_dataset_id(features, parameters, methods, processing_codes, owners, a
 
 @app.callback(
     Output('sites_summ', 'children'),
-    [Input('dataset_id', 'children')])
-def update_summ_data(dataset_id):
+    [Input('dataset_id', 'children'), Input('date_sel', 'start_date'), Input('date_sel', 'end_date')])
+def update_summ_data(dataset_id, start_date, end_date):
     if dataset_id is None:
         print('No new sites_summ')
     else:
         summ_r = requests.post(base_url + 'sampling_sites', params={'dataset_id': dataset_id, 'compression': 'zstd'})
 
         dc = zstd.ZstdDecompressor()
-        summ_json = dc.decompress(summ_r.content).decode()
+        summ_data1 = orjson.loads(dc.decompress(summ_r.content).decode())
+        summ_data2 = [s for s in summ_data1 if (pd.Timestamp(s['stats']['to_date']) > pd.Timestamp(start_date)) and (pd.Timestamp(s['stats']['from_date']) < pd.Timestamp(end_date))]
+        summ_json = orjson.dumps(summ_data2).decode()
 
         return summ_json
 
@@ -405,9 +409,24 @@ def update_table(sites_summ, sites, selectedData, clickData):
 
 
 @app.callback(
-    Output('selected-data', 'figure'),
+    Output('ts_data', 'children'),
     [Input('sites', 'value'), Input('date_sel', 'start_date'), Input('date_sel', 'end_date'), Input('dataset_id', 'children')])
-def display_data(sites, start_date, end_date, dataset_id):
+def get_data(sites, start_date, end_date, dataset_id):
+    if dataset_id:
+        if sites:
+            ts_r = requests.get(base_url + 'time_series_results', params={'dataset_id': dataset_id, 'site_id': sites, 'compression': 'zstd', 'from_date': start_date+'T00:00', 'to_date': end_date+'T00:00'})
+            dc = zstd.ZstdDecompressor()
+            ts1 = dc.decompress(ts_r.content).decode()
+
+            return ts1
+
+
+
+@app.callback(
+    Output('selected-data', 'figure'),
+    [Input('ts_data', 'children')],
+    [State('sites', 'value'), State('dataset_id', 'children'), State('date_sel', 'start_date'), State('date_sel', 'end_date')])
+def display_data(ts_data, sites, dataset_id, start_date, end_date):
 
     base_dict = dict(
             data = [dict(x=0, y=0)],
@@ -424,9 +443,7 @@ def display_data(sites, start_date, end_date, dataset_id):
     if not dataset_id:
         return base_dict
 
-    ts_r = requests.get(base_url + 'time_series_results', params={'dataset_id': dataset_id, 'site_id': sites, 'compression': 'zstd', 'from_date': start_date+'T00:00', 'to_date': end_date+'T00:00'})
-    dc = zstd.ZstdDecompressor()
-    ts1 = orjson.loads(dc.decompress(ts_r.content))
+    ts1 = orjson.loads(ts_data)
 
     x1 = [t['from_date'] for t in ts1]
     y1 = [t['result'] for t in ts1]
@@ -463,15 +480,37 @@ def update_table(dataset_id, datasets):
 
         return [dataset_table1]
 
-# if __name__ == '__main__':
-#  # 	app.run_server(debug=True, host='0.0.0.0', port=8050)
-# 	app.run_server(debug=True)
+
+@app.callback(
+    Output('download-tsdata', 'href'),
+    [Input('ts_data', 'children')],
+    [State('sites', 'value'), State('dataset_id', 'children')])
+def download_tsdata(ts_data, sites, dataset_id):
+    if dataset_id:
+        if sites:
+            ts_data1 = pd.DataFrame(orjson.loads(ts_data))
+            ts_data1['from_date'] = pd.to_datetime(ts_data1['from_date'])
+
+            csv_string = ts_data1.to_csv(index=False, encoding='utf-8')
+            csv_string = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string)
+            return csv_string
 
 
-@server.route("/wai-vis")
-def my_dash_app():
-    return app.index()
+# @app.callback(
+#     Output('download-summ', 'href'),
+#     [Input('summ_data', 'children')])
+# def download_summ(summ_data):
+#     new_summ = pd.read_json(summ_data, orient='split')[table_cols]
+#
+#     csv_string = new_summ.to_csv(index=False, encoding='utf-8')
+#     csv_string = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string)
+#     return csv_string
 
 
+if __name__ == '__main__':
+    server.run(debug=True, host='0.0.0.0', port=80)
 
 
+# @server.route("/wai-vis")
+# def my_dash_app():
+#     return app.index()
