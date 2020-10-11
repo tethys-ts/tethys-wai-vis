@@ -39,6 +39,15 @@ def select_dataset(features, parameters, methods, processing_codes, owners, aggr
     return dataset
 
 
+def build_table(site_summ, dataset):
+    """
+
+    """
+    table1 = [{'Site ID': s['ref'], 'Site Name': s['name'], 'Min Value': s['stats']['min'], 'Mean Value': s['stats']['mean'], 'Max Value': s['stats']['max'], 'Units': dataset['units'], 'Precision': dataset['precision'], 'Start Date': s['stats']['from_date'], 'End Date': s['stats']['to_date']} for s in site_summ]
+
+    return table1
+
+
 ts_plot_height = 600
 map_height = 700
 
@@ -92,7 +101,7 @@ def serve_layout():
 
     init_dataset_id = init_dataset['dataset_id']
 
-    dataset_table_cols = {'license': 'Data License', 'precision': 'Data Precision', 'units': 'Units'}
+    dataset_table_cols = {'license': 'Data License', 'attribution': 'Attribution'}
 
     ### prepare summaries and initial states
     max_date = pd.Timestamp.now()
@@ -115,7 +124,7 @@ def serve_layout():
     init_lat = [l['geometry']['coordinates'][1] for l in init_summ]
     init_names = [l['ref'] + '<br>' + l['name'] for l in init_summ]
 
-    init_table = [{'Site ID': s['ref'], 'Site Name': s['name'], 'Min Value': s['stats']['min'], 'Mean Value': s['stats']['mean'], 'Max Value': s['stats']['max'], 'Start Date': s['stats']['from_date'], 'End Date': s['stats']['to_date'], 'Last Modified Date': s['modified_date']} for s in init_summ]
+    init_table = build_table(init_summ, init_dataset)
 
     # init_ts_r = requests.get(base_url + 'time_series_results', params={'dataset_id': init_dataset_id, 'site_id': init_site_id, 'compression': 'zstd', 'from_date': start_date.round('s').isoformat(), 'to_date': max_date.round('s').isoformat()})
     # dc = zstd.ZstdDecompressor()
@@ -351,6 +360,7 @@ def update_display_map(sites_summ, figure):
 
         lon1 = [l['geometry']['coordinates'][0] for l in sites_summ1]
         lat1 = [l['geometry']['coordinates'][1] for l in sites_summ1]
+        [l.update({'name': ''}) for l in sites_summ1 if not 'name' in l]
         names1 = [l['ref'] + '<br>' + l['name'] for l in sites_summ1]
 
         data = [dict(
@@ -395,15 +405,22 @@ def update_sites_values(selectedData, clickData, sites_summ):
 
 @app.callback(
     Output('summ_table', 'data'),
-    [Input('sites_summ', 'children'), Input('sites', 'value'), Input('site-map', 'selectedData'), Input('site-map', 'clickData')])
-def update_table(sites_summ, sites, selectedData, clickData):
+    [Input('sites_summ', 'children'), Input('sites', 'value'), Input('site-map', 'selectedData'), Input('site-map', 'clickData')],
+    [State('datasets', 'children'), State('dataset_id', 'children')])
+def update_table(sites_summ, sites, selectedData, clickData, datasets, dataset_id):
     if sites_summ:
         new_summ = orjson.loads(sites_summ)
+        datasets1 = orjson.loads(datasets)
+        dataset1 = [d for d in datasets1 if d['dataset_id'] == dataset_id][0]
 
         if sites:
-            summ_table = [{'Site ID': s['ref'], 'Site Name': s['name'], 'Min Value': s['stats']['min'], 'Mean Value': s['stats']['mean'], 'Max Value': s['stats']['max'], 'Start Date': s['stats']['from_date'], 'End Date': s['stats']['to_date'], 'Last Modified Date': s['modified_date']} for s in new_summ if s['site_id'] in sites]
+            new_summ1 = [s for s in new_summ if s['site_id'] in sites]
         else:
-            summ_table = [{'Site ID': s['ref'], 'Site Name': s['name'], 'Min Value': s['stats']['min'], 'Mean Value': s['stats']['mean'], 'Max Value': s['stats']['max'], 'Start Date': s['stats']['from_date'], 'End Date': s['stats']['to_date'], 'Last Modified Date': s['modified_date']} for s in new_summ]
+            new_summ1 = new_summ
+
+        [l.update({'name': ''}) for l in new_summ1 if not 'name' in l]
+
+        summ_table = build_table(new_summ1, dataset1)
 
         return summ_table
 
@@ -469,14 +486,19 @@ def display_data(ts_data, sites, dataset_id, start_date, end_date):
     [State('datasets', 'children')])
 def update_table(dataset_id, datasets):
     if dataset_id:
-        dataset_table_cols = {'license': 'Data License', 'precision': 'Data Precision', 'units': 'Units'}
+        # dataset_table_cols = {'license': 'Data License', 'attribution': 'Attribution'}
 
         datasets1 = orjson.loads(datasets)
 
         dataset1 = [d for d in datasets1 if d['dataset_id'] == dataset_id][0]
 
-        dataset_table1 = {}
-        [dataset_table1.update({v: dataset1[k]}) for k, v in dataset_table_cols.items()]
+        if 'attribution' in dataset1:
+            attr = dataset1['attribution']
+        else:
+            attr = 'Data sourced from ' + dataset1['owner']
+
+        dataset_table1 = {'Data License': dataset1['license'], 'Attribution': attr}
+        # [dataset_table1.update({v: dataset1[k]}) for k, v in dataset_table_cols.items()]
 
         return [dataset_table1]
 
@@ -508,7 +530,7 @@ def download_tsdata(ts_data, sites, dataset_id):
 
 
 if __name__ == '__main__':
-    server.run(debug=True, host='0.0.0.0', port=80)
+    server.run(debug=True, host='0.0.0.0', port=8001)
 
 
 # @server.route("/wai-vis")
