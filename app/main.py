@@ -12,14 +12,16 @@ import requests
 import zstandard as zstd
 import orjson
 import flask
+from typing import Optional, List, Any
+from tethysts.utils import get_results_obj_s3, result_filters, process_results_output
 # from util import app_ts_summ, sel_ts_summ, ecan_ts_data
 
 pd.options.display.max_columns = 10
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+# external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 server = flask.Flask(__name__)
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server,  url_base_pathname = '/')
+app = dash.Dash(__name__, server=server,  url_base_pathname = '/')
 
 # app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server)
 # server = app.server
@@ -27,14 +29,44 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=serv
 ##########################################
 ### Parameters
 
-base_url = 'http://tethys-ts.xyz/tethys/data/'
+# base_url = 'http://tethys-ts.xyz/tethys/data/'
+base_url = 'http://127.0.0.1:8080/tethys/data/'
 
 
-def select_dataset(features, parameters, methods, processing_codes, owners, aggregation_statistics, frequency_intervals, utc_offsets, datasets):
+def dataset_filter(dataset_id: Optional[str] = None, feature: Optional[str] = None, parameter: Optional[str] = None, method: Optional[str] = None, product_code: Optional[str] = None, owner: Optional[str] = None, aggregation_statistic: Optional[str] = None, frequency_interval: Optional[str] = None, utc_offset: Optional[str] = None):
     """
 
     """
-    dataset = [d for d in datasets if (d['feature'] == features) and (d['parameter'] == parameters) and (d['method'] == methods) and (d['owner'] == owners) and (d['aggregation_statistic'] == aggregation_statistics) and (d['frequency_interval'] == frequency_intervals) and (d['utc_offset'] == utc_offsets) and (d['processing_code'] == processing_codes)][0]
+    q_dict = {}
+
+    if isinstance(dataset_id, str):
+        q_dict.update({'dataset_id': dataset_id})
+    if isinstance(feature, str):
+        q_dict.update({'feature': feature})
+    if isinstance(parameter, str):
+        q_dict.update({'parameter': parameter})
+    if isinstance(method, str):
+        q_dict.update({'method': method})
+    if isinstance(product_code, str):
+        q_dict.update({'product_code': product_code})
+    if isinstance(owner, str):
+        q_dict.update({'owner': owner})
+    if isinstance(aggregation_statistic, str):
+        q_dict.update({'aggregation_statistic': aggregation_statistic})
+    if isinstance(frequency_interval, str):
+        q_dict.update({'frequency_interval': frequency_interval})
+    if isinstance(utc_offset, str):
+        q_dict.update({'utc_offset': utc_offset})
+
+    return q_dict
+
+
+
+def select_dataset(features, parameters, methods, product_codes, owners, aggregation_statistics, frequency_intervals, utc_offsets, datasets):
+    """
+
+    """
+    dataset = [d for d in datasets if (d['feature'] == features) and (d['parameter'] == parameters) and (d['method'] == methods) and (d['owner'] == owners) and (d['aggregation_statistic'] == aggregation_statistics) and (d['frequency_interval'] == frequency_intervals) and (d['utc_offset'] == utc_offsets) and (d['product_code'] == product_codes)][0]
 
     return dataset
 
@@ -43,7 +75,7 @@ def build_table(site_summ, dataset):
     """
 
     """
-    table1 = [{'Site ID': s['ref'], 'Site Name': s['name'], 'Min Value': s['stats']['min'], 'Mean Value': s['stats']['mean'], 'Max Value': s['stats']['max'], 'Units': dataset['units'], 'Precision': dataset['precision'], 'Start Date': s['stats']['from_date'], 'End Date': s['stats']['to_date']} for s in site_summ]
+    table1 = [{'Station reference': s['ref'], 'Station Name': s['name'], 'Min Value': s['stats']['min'], 'Max Value': s['stats']['max'], 'Units': dataset['units'], 'Precision': dataset['precision'], 'Start Date': s['stats']['from_date'], 'End Date': s['stats']['to_date']} for s in site_summ]
 
     return table1
 
@@ -69,7 +101,7 @@ def serve_layout():
 
     dc = zstd.ZstdDecompressor()
 
-    datasets = requests.get(base_url + 'datasets').json()
+    datasets = requests.get(base_url + 'get_datasets').json()
 
     requested_datasets = datasets.copy()
 
@@ -82,8 +114,8 @@ def serve_layout():
     methods = list(set([f['method'] for f in requested_datasets]))
     methods.sort()
 
-    processing_codes = list(set([f['processing_code'] for f in requested_datasets]))
-    processing_codes.sort()
+    product_codes = list(set([f['product_code'] for f in requested_datasets]))
+    product_codes.sort()
 
     owners = list(set([f['owner'] for f in requested_datasets]))
     owners.sort()
@@ -97,7 +129,7 @@ def serve_layout():
     utc_offsets = list(set([f['utc_offset'] for f in requested_datasets]))
     utc_offsets.sort()
 
-    init_dataset = [d for d in requested_datasets if (d['feature'] == 'waterway') and (d['parameter'] == 'streamflow') and (d['processing_code'] == 'quality_controlled_data')][0]
+    init_dataset = [d for d in requested_datasets if (d['feature'] == 'waterway') and (d['parameter'] == 'streamflow') and (d['product_code'] == 'quality_controlled_data')][0]
 
     init_dataset_id = init_dataset['dataset_id']
 
@@ -111,18 +143,18 @@ def serve_layout():
     #
     # new_sites = init_summ.drop_duplicates('ExtSiteID')
 
-    init_summ_r = requests.post(base_url + 'sampling_sites', params={'dataset_id': init_dataset_id, 'compression': 'zstd'})
+    init_summ_r = requests.post(base_url + 'get_stations', params={'dataset_id': init_dataset_id, 'compression': 'zstd'})
 
     init_summ = orjson.loads(dc.decompress(init_summ_r.content))
-    init_summ = [s for s in init_summ if (pd.Timestamp(s['stats']['to_date']) > start_date) and (pd.Timestamp(s['stats']['from_date']) < max_date)]
+    init_summ = [s for s in init_summ if (pd.Timestamp(s['stats']['to_date']).tz_localize(None) > start_date) and (pd.Timestamp(s['stats']['from_date']).tz_localize(None) < max_date)]
 
-    init_sites = [{'label': s['ref'], 'value': s['site_id']} for s in init_summ]
+    init_sites = [{'label': s['ref'], 'value': s['station_id']} for s in init_summ]
 
     init_site_id = [s['value'] for s in init_sites if s['label'] == '70105'][0]
 
     init_lon = [l['geometry']['coordinates'][0] for l in init_summ]
     init_lat = [l['geometry']['coordinates'][1] for l in init_summ]
-    init_names = [l['ref'] + '<br>' + l['name'] for l in init_summ]
+    init_names = [l['ref'] + '<br>' + l['name'] if 'name' in l else l['ref'] for l in init_summ]
 
     init_table = build_table(init_summ, init_dataset)
 
@@ -139,10 +171,10 @@ def serve_layout():
         dcc.Dropdown(options=[{'label': d, 'value': d} for d in parameters], value='streamflow', id='parameters'),
         html.Label('Method'),
         dcc.Dropdown(options=[{'label': d, 'value': d} for d in methods], value='sensor_recording', id='methods'),
-        html.Label('Processing Code'),
-        dcc.Dropdown(options=[{'label': d, 'value': d} for d in processing_codes], value='quality_controlled_data', id='processing_codes'),
+        html.Label('Product Code'),
+        dcc.Dropdown(options=[{'label': d, 'value': d} for d in product_codes], value='quality_controlled_data', id='product_codes'),
         html.Label('Data Owner'),
-        dcc.Dropdown(options=[{'label': d, 'value': d} for d in owners], value='ECan', id='owners'),
+        dcc.Dropdown(options=[{'label': d, 'value': d} for d in owners], value=owners[0], id='owners'),
         html.Label('Aggregation Statistic'),
         dcc.Dropdown(options=[{'label': d, 'value': d} for d in aggregation_statistics], value='mean', id='aggregation_statistics'),
         html.Label('Frequency Interval'),
@@ -157,7 +189,7 @@ def serve_layout():
             id='date_sel'
 #               start_date_placeholder_text='DD/MM/YYYY'
             ),
-        html.Label('Site IDs'),
+        html.Label('Station reference ID'),
         dcc.Dropdown(options=init_sites, id='sites')
         # html.Label('Water quality below detection limit method'),
         # dcc.RadioItems(
@@ -171,7 +203,7 @@ def serve_layout():
     className='two columns', style={'margin': 20}),
 
     html.Div([
-        html.P('Click on a site or "box select" multiple sites:', style={'display': 'inline-block'}),
+        html.P('Click on a station or "box select" multiple stations:', style={'display': 'inline-block'}),
         dcc.Graph(
                 id = 'site-map',
                 style={'height': map_height},
@@ -210,7 +242,7 @@ def serve_layout():
                 'whiteSpace': 'normal'}
             )
 
-    ], className='four columns', style={'margin': 20}),
+    ], className='three columns', style={'margin': 20}),
 #
     html.Div([
 
@@ -251,6 +283,7 @@ def serve_layout():
     html.Div(id='datasets', style={'display': 'none'}, children=orjson.dumps(datasets).decode()),
     html.Div(id='dataset_id', style={'display': 'none'}, children=init_dataset_id),
     html.Div(id='sites_summ', style={'display': 'none'}, children=orjson.dumps(init_summ).decode())
+    # dcc.Store(id='map_layout', data=orjson.dumps(map_layout).decode())
 #     dcc.Graph(id='map-layout', style={'display': 'none'}, figure=dict(data=[], layout=map_layout))
 ], style={'margin':0})
 
@@ -264,10 +297,11 @@ app.layout = serve_layout
 
 
 @app.callback(
-    [Output('parameters', 'options'), Output('methods', 'options'), Output('processing_codes', 'options'), Output('owners', 'options'), Output('aggregation_statistics', 'options'), Output('frequency_intervals', 'options'), Output('utc_offsets', 'options')],
+    [Output('parameters', 'options'), Output('methods', 'options'), Output('product_codes', 'options'), Output('owners', 'options'), Output('aggregation_statistics', 'options'), Output('frequency_intervals', 'options'), Output('utc_offsets', 'options')],
     [Input('features', 'value')],
+    # [State('parameters', 'options'), State('methods', 'options'), State('product_codes', 'options'), State('owners', 'options'), State('aggregation_statistics', 'options'), State('frequency_intervals', 'options'), State('utc_offsets', 'options')]
     [State('datasets', 'children')])
-def update_parameters(features, datasets):
+def update_parameters1(features, datasets):
 
     def make_options(val):
         l1 = [{'label': v, 'value': v} for v in val]
@@ -276,14 +310,19 @@ def update_parameters(features, datasets):
     datasets1 = orjson.loads(datasets)
     datasets2 = [d for d in datasets1 if d['feature'] == features]
 
+    # print(datasets2)
+
+    # features = list(set([d['feature'] for d in datasets2]))
+    # features.sort()
+
     parameters = list(set([d['parameter'] for d in datasets2]))
     parameters.sort()
 
     methods = list(set([d['method'] for d in datasets2]))
     methods.sort()
 
-    processing_codes = list(set([d['processing_code'] for d in datasets2]))
-    processing_codes.sort()
+    product_codes = list(set([d['product_code'] for d in datasets2]))
+    product_codes.sort()
 
     owners = list(set([d['owner'] for d in datasets2]))
     owners.sort()
@@ -297,17 +336,101 @@ def update_parameters(features, datasets):
     utc_offsets = list(set([d['utc_offset'] for d in datasets2]))
     utc_offsets.sort()
 
-    return make_options(parameters), make_options(methods), make_options(processing_codes), make_options(owners), make_options(aggregation_statistics), make_options(frequency_intervals), make_options(utc_offsets)
+    return make_options(parameters), make_options(methods), make_options(product_codes), make_options(owners), make_options(aggregation_statistics), make_options(frequency_intervals), make_options(utc_offsets)
 
+
+# @app.callback(
+#     [Output('methods', 'options'), Output('product_codes', 'options'), Output('owners', 'options'), Output('aggregation_statistics', 'options'), Output('frequency_intervals', 'options'), Output('utc_offsets', 'options')],
+#     [Input('parameters', 'value')],
+#     [State('features', 'value')]
+#     )
+# def update_parameters2(parameters, features):
+#     print(features)
+#
+#     def make_options(val):
+#         l1 = [{'label': v, 'value': v} for v in val]
+#         return l1
+#
+#     d_dict = dataset_filter(None, features, parameters)
+#
+#     datasets2 = requests.get(base_url + 'get_datasets', params=d_dict).json()
+#
+#     # features = list(set([d['feature'] for d in datasets2]))
+#     # features.sort()
+#
+#     # parameters = list(set([d['parameter'] for d in datasets2]))
+#     # parameters.sort()
+#
+#     methods = list(set([d['method'] for d in datasets2]))
+#     methods.sort()
+#
+#     product_codes = list(set([d['product_code'] for d in datasets2]))
+#     product_codes.sort()
+#
+#     owners = list(set([d['owner'] for d in datasets2]))
+#     owners.sort()
+#
+#     aggregation_statistics = list(set([d['aggregation_statistic'] for d in datasets2]))
+#     aggregation_statistics.sort()
+#
+#     frequency_intervals = list(set([d['frequency_interval'] for d in datasets2]))
+#     frequency_intervals.sort()
+#
+#     utc_offsets = list(set([d['utc_offset'] for d in datasets2]))
+#     utc_offsets.sort()
+#
+#     return make_options(methods), make_options(product_codes), make_options(owners), make_options(aggregation_statistics), make_options(frequency_intervals), make_options(utc_offsets)
+
+
+# @app.callback(
+#     [Output('features', 'value'), Output('parameters', 'options'), Output('methods', 'options'), Output('product_codes', 'options'), Output('owners', 'options'), Output('aggregation_statistics', 'options'), Output('frequency_intervals', 'options'), Output('utc_offsets', 'options')],
+#     [Input('features', 'value'), Input('parameters', 'value'), Input('methods', 'value'), Input('product_codes', 'value'), Input('owners', 'value'), Input('aggregation_statistics', 'value'), Input('frequency_intervals', 'value'), Input('utc_offsets', 'value')]
+#     )
+# def update_parameters(features, parameters, methods, product_codes, owners, aggregation_statistics, frequency_intervals, utc_offsets):
+#     print(features)
+#
+#     def make_options(val):
+#         l1 = [{'label': v, 'value': v} for v in val]
+#         return l1
+#
+#     d_dict = dataset_filter(None, features, parameters, methods, product_codes, owners, aggregation_statistics, frequency_intervals, utc_offsets)
+#
+#     datasets2 = requests.get(base_url + 'get_datasets', param=d_dict).json()
+#
+#     features = list(set([d['feature'] for d in datasets2]))
+#     features.sort()
+#
+#     parameters = list(set([d['parameter'] for d in datasets2]))
+#     parameters.sort()
+#
+#     methods = list(set([d['method'] for d in datasets2]))
+#     methods.sort()
+#
+#     product_codes = list(set([d['product_code'] for d in datasets2]))
+#     product_codes.sort()
+#
+#     owners = list(set([d['owner'] for d in datasets2]))
+#     owners.sort()
+#
+#     aggregation_statistics = list(set([d['aggregation_statistic'] for d in datasets2]))
+#     aggregation_statistics.sort()
+#
+#     frequency_intervals = list(set([d['frequency_interval'] for d in datasets2]))
+#     frequency_intervals.sort()
+#
+#     utc_offsets = list(set([d['utc_offset'] for d in datasets2]))
+#     utc_offsets.sort()
+#
+#     return make_options(features), make_options(parameters), make_options(methods), make_options(product_codes), make_options(owners), make_options(aggregation_statistics), make_options(frequency_intervals), make_options(utc_offsets)
 
 @app.callback(
-    Output('dataset_id', 'children'), [Input('features', 'value'), Input('parameters', 'value'), Input('methods', 'value'), Input('processing_codes', 'value'), Input('owners', 'value'), Input('aggregation_statistics', 'value'), Input('frequency_intervals', 'value'), Input('utc_offsets', 'value')], [State('datasets', 'children')])
-def update_dataset_id(features, parameters, methods, processing_codes, owners, aggregation_statistics, frequency_intervals, utc_offsets, datasets):
+    Output('dataset_id', 'children'), [Input('features', 'value'), Input('parameters', 'value'), Input('methods', 'value'), Input('product_codes', 'value'), Input('owners', 'value'), Input('aggregation_statistics', 'value'), Input('frequency_intervals', 'value'), Input('utc_offsets', 'value')], [State('datasets', 'children')])
+def update_dataset_id(features, parameters, methods, product_codes, owners, aggregation_statistics, frequency_intervals, utc_offsets, datasets):
     try:
-        dataset = select_dataset(features, parameters, methods, processing_codes, owners, aggregation_statistics, frequency_intervals, utc_offsets, orjson.loads(datasets))
+        dataset = select_dataset(features, parameters, methods, product_codes, owners, aggregation_statistics, frequency_intervals, utc_offsets, orjson.loads(datasets))
         dataset_id = dataset['dataset_id']
 
-        print(features, parameters, methods, processing_codes, owners, aggregation_statistics, frequency_intervals, utc_offsets)
+        print(features, parameters, methods, product_codes, owners, aggregation_statistics, frequency_intervals, utc_offsets)
         return dataset_id
     except:
         print('No available dataset_id')
@@ -320,11 +443,11 @@ def update_summ_data(dataset_id, start_date, end_date):
     if dataset_id is None:
         print('No new sites_summ')
     else:
-        summ_r = requests.post(base_url + 'sampling_sites', params={'dataset_id': dataset_id, 'compression': 'zstd'})
+        summ_r = requests.post(base_url + 'get_stations', params={'dataset_id': dataset_id, 'compression': 'zstd'})
 
         dc = zstd.ZstdDecompressor()
         summ_data1 = orjson.loads(dc.decompress(summ_r.content).decode())
-        summ_data2 = [s for s in summ_data1 if (pd.Timestamp(s['stats']['to_date']) > pd.Timestamp(start_date)) and (pd.Timestamp(s['stats']['from_date']) < pd.Timestamp(end_date))]
+        summ_data2 = [s for s in summ_data1 if (pd.Timestamp(s['stats']['to_date']).tz_localize(None) > pd.Timestamp(start_date)) and (pd.Timestamp(s['stats']['from_date']).tz_localize(None) < pd.Timestamp(end_date))]
         summ_json = orjson.dumps(summ_data2).decode()
 
         return summ_json
@@ -338,7 +461,7 @@ def update_site_list(sites_summ):
         return []
     else:
         sites_summ1 = orjson.loads(sites_summ)
-        sites_options = [{'label': s['ref'], 'value': s['site_id']} for s in sites_summ1]
+        sites_options = [{'label': s['ref'], 'value': s['station_id']} for s in sites_summ1]
 
         return sites_options
 
@@ -394,7 +517,7 @@ def update_sites_values(selectedData, clickData, sites_summ):
         site1_index = None
 
     if site1_index:
-        site1_id = orjson.loads(sites_summ)[site1_index]['site_id']
+        site1_id = orjson.loads(sites_summ)[site1_index]['station_id']
     else:
         site1_id = ''
 
@@ -414,7 +537,7 @@ def update_table(sites_summ, sites, selectedData, clickData, datasets, dataset_i
         dataset1 = [d for d in datasets1 if d['dataset_id'] == dataset_id][0]
 
         if sites:
-            new_summ1 = [s for s in new_summ if s['site_id'] in sites]
+            new_summ1 = [s for s in new_summ if s['station_id'] in sites]
         else:
             new_summ1 = new_summ
 
@@ -431,14 +554,14 @@ def update_table(sites_summ, sites, selectedData, clickData, datasets, dataset_i
 def get_data(sites, start_date, end_date, dataset_id):
     if dataset_id:
         if sites:
-            ts_r = requests.get(base_url + 'time_series_results', params={'dataset_id': dataset_id, 'site_id': sites, 'compression': 'zstd', 'from_date': start_date+'T00:00', 'to_date': end_date+'T00:00'})
+            ts_r = requests.get(base_url + 'get_results', params={'dataset_id': dataset_id, 'station_id': sites, 'compression': 'zstd', 'from_date': start_date+'T00:00', 'to_date': end_date+'T00:00', 'remove_height': True})
             dc = zstd.ZstdDecompressor()
             ts1 = dc.decompress(ts_r.content).decode()
 
             return ts1
-
-
-
+#
+#
+#
 @app.callback(
     Output('selected-data', 'figure'),
     [Input('ts_data', 'children')],
@@ -462,8 +585,8 @@ def display_data(ts_data, sites, dataset_id, start_date, end_date):
 
     ts1 = orjson.loads(ts_data)
 
-    x1 = [t['from_date'] for t in ts1]
-    y1 = [t['result'] for t in ts1]
+    x1 = ts1['coords']['time']['data']
+    y1 = ts1['data']
 
     set1 = go.Scattergl(
             x=x1,
@@ -503,19 +626,19 @@ def update_table(dataset_id, datasets):
         return [dataset_table1]
 
 
-@app.callback(
-    Output('download-tsdata', 'href'),
-    [Input('ts_data', 'children')],
-    [State('sites', 'value'), State('dataset_id', 'children')])
-def download_tsdata(ts_data, sites, dataset_id):
-    if dataset_id:
-        if sites:
-            ts_data1 = pd.DataFrame(orjson.loads(ts_data))
-            ts_data1['from_date'] = pd.to_datetime(ts_data1['from_date'])
-
-            csv_string = ts_data1.to_csv(index=False, encoding='utf-8')
-            csv_string = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string)
-            return csv_string
+# @app.callback(
+#     Output('download-tsdata', 'href'),
+#     [Input('ts_data', 'children')],
+#     [State('sites', 'value'), State('dataset_id', 'children')])
+# def download_tsdata(ts_data, sites, dataset_id):
+#     if dataset_id:
+#         if sites:
+#             ts_data1 = pd.DataFrame(orjson.loads(ts_data))
+#             ts_data1['from_date'] = pd.to_datetime(ts_data1['from_date'])
+#
+#             csv_string = ts_data1.to_csv(index=False, encoding='utf-8')
+#             csv_string = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string)
+#             return csv_string
 
 
 # @app.callback(
@@ -530,7 +653,7 @@ def download_tsdata(ts_data, sites, dataset_id):
 
 
 if __name__ == '__main__':
-    server.run(debug=True, host='0.0.0.0', port=80)
+    server.run(debug=True, host='0.0.0.0', port=8081)
 
 
 # @server.route("/wai-vis")
