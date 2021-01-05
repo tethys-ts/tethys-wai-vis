@@ -129,7 +129,7 @@ def serve_layout():
     utc_offsets = list(set([f['utc_offset'] for f in requested_datasets]))
     utc_offsets.sort()
 
-    init_dataset = [d for d in requested_datasets if (d['feature'] == 'waterway') and (d['parameter'] == 'streamflow') and (d['product_code'] == 'quality_controlled_data')][0]
+    init_dataset = [d for d in requested_datasets if (d['feature'] == 'waterway') and (d['parameter'] == 'streamflow') and (d['product_code'] == 'quality_controlled_data') and (d['owner'] == 'Environment Canterbury')][0]
 
     init_dataset_id = init_dataset['dataset_id']
 
@@ -653,7 +653,7 @@ def update_table(dataset_id, datasets):
 
 
 if __name__ == '__main__':
-    server.run(debug=True, host='0.0.0.0', port=8081)
+    server.run(debug=True, host='0.0.0.0', port=80)
 
 
 # @server.route("/wai-vis")
