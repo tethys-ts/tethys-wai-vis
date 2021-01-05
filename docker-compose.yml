@@ -11,14 +11,8 @@ services:
     #   - "27017:27017"
   db-initialize:
     image: tethysts/tethys-db-initialize:dev
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: root
-      DATABASE: tethys
-      READER_USERNAME: reader
-      READER_PASSWORD: reader
-      RW_USERNAME: readwriter
-      RW_PASSWORD: readwriter
+    volumes:
+        - "/media/sdb1/Projects/git/tethys/tethys-web-service/parameters.yml:/parameters.yml"
     depends_on:
       - "db"
   updater:
