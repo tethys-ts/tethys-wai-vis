@@ -13,7 +13,7 @@ import zstandard as zstd
 import orjson
 import flask
 from typing import Optional, List, Any
-from tethysts.utils import get_results_obj_s3, result_filters, process_results_output
+# from tethysts.utils import get_results_obj_s3, result_filters, process_results_output
 # from util import app_ts_summ, sel_ts_summ, ecan_ts_data
 
 pd.options.display.max_columns = 10
@@ -29,8 +29,8 @@ app = dash.Dash(__name__, server=server,  url_base_pathname = '/')
 ##########################################
 ### Parameters
 
-# base_url = 'http://tethys-ts.xyz/tethys/data/'
-base_url = 'http://127.0.0.1:8080/tethys/data/'
+base_url = 'http://tethys-ts.xyz/tethys/data/'
+# base_url = 'http://127.0.0.1:8080/tethys/data/'
 
 
 def dataset_filter(dataset_id: Optional[str] = None, feature: Optional[str] = None, parameter: Optional[str] = None, method: Optional[str] = None, product_code: Optional[str] = None, owner: Optional[str] = None, aggregation_statistic: Optional[str] = None, frequency_interval: Optional[str] = None, utc_offset: Optional[str] = None):
