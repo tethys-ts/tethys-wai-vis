@@ -23,6 +23,8 @@ services:
     #   - "80:80"
   wai-vis:
     image: tethysts/tethys-wai-vis:dev
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     # depends_on:
     #   - "web-service"
     ports:
