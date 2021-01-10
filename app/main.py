@@ -29,9 +29,10 @@ app = dash.Dash(__name__, server=server,  url_base_pathname = '/')
 ##########################################
 ### Parameters
 
-base_url = 'http://tethys-ts.xyz/tethys/data/'
+# base_url = 'http://tethys-ts.xyz/tethys/data/'
 # base_url = 'http://127.0.0.1:8080/tethys/data/'
 # base_url = 'host.docker.internal/tethys/data/'
+base_url = 'http://web-service/tethys/data/'
 
 
 def dataset_filter(dataset_id: Optional[str] = None, feature: Optional[str] = None, parameter: Optional[str] = None, method: Optional[str] = None, product_code: Optional[str] = None, owner: Optional[str] = None, aggregation_statistic: Optional[str] = None, frequency_interval: Optional[str] = None, utc_offset: Optional[str] = None):
