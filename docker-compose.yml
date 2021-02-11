@@ -1,5 +1,9 @@
 version: '3'
 
+networks:
+  traefik-public:
+    external: true
+
 services:
   db:
     image: mongo:4.2-bionic
@@ -18,8 +22,8 @@ services:
       - "db"
     # ports:
     #   - "80:80"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+    # volumes:
+    #   - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - traefik-public
     deploy:
@@ -46,8 +50,8 @@ services:
       - "web-service"
     # ports:
     #   - "8081:80"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+    # volumes:
+    #   - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - traefik-public
     deploy:
