@@ -21,6 +21,8 @@ services:
     #   - "27017:27017"
   db-init:
     image: tethysts/tethys-db-initialize:dev
+    restart_policy:
+      condition: none
     deploy:
       placement:
         constraints:
