@@ -1,9 +1,9 @@
 version: '3.3'
 
 networks:
-  # net:
-  #   driver: overlay
-  #   attachable: true
+  net:
+    driver: overlay
+    attachable: true
   traefik-public:
     external: true
 
@@ -15,8 +15,8 @@ services:
         constraints:
           - node.role == manager
     command: --wiredTigerJournalCompressor zstd --wiredTigerCollectionBlockCompressor zstd
-    # networks:
-    #   - net
+    networks:
+      - net
     # ports:
     #   - "27017:27017"
   db-init:
@@ -25,8 +25,8 @@ services:
       placement:
         constraints:
           - node.role == manager
-    # networks:
-    #   - net
+    networks:
+      - net
     # volumes:
     #     - "~/git/tethys/tethys-web-service/parameters.yml:/parameters.yml"
     depends_on:
@@ -40,7 +40,7 @@ services:
     # volumes:
     #   - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
-      # - net
+      - net
       - traefik-public
     deploy:
       placement:
