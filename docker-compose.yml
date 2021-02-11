@@ -1,6 +1,9 @@
 version: '3'
 
 networks:
+  net:
+    driver: overlay
+    attachable: true
   traefik-public:
     external: true
 
@@ -8,10 +11,14 @@ services:
   db:
     image: mongo:4.2-bionic
     command: --wiredTigerJournalCompressor zstd --wiredTigerCollectionBlockCompressor zstd
+    networks:
+      - net
     # ports:
     #   - "27017:27017"
   db-init:
     image: tethysts/tethys-db-initialize:dev
+    networks:
+      - net
     # volumes:
     #     - "~/git/tethys/tethys-web-service/parameters.yml:/parameters.yml"
     depends_on:
@@ -25,6 +32,7 @@ services:
     # volumes:
     #   - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
+      - net
       - traefik-public
     deploy:
       placement:
@@ -53,6 +61,7 @@ services:
     # volumes:
     #   - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
+      - net
       - traefik-public
     deploy:
       placement:
