@@ -37,10 +37,10 @@ services:
         - traefik.http.routers.tethys-api-http.rule=Host(`${DOMAIN1?Variable not set}`)
         - traefik.http.routers.tethys-api-http.entrypoints=http
         # - traefik.http.routers.tethys-api-http.middlewares=https-redirect
-        - traefik.http.routers.tethys-api-https.rule=Host(`${DOMAIN1?Variable not set}`)
-        - traefik.http.routers.tethys-api-https.entrypoints=https
-        - traefik.http.routers.tethys-api-https.tls=true
-        - traefik.http.routers.tethys-api-https.tls.certresolver=le
+        # - traefik.http.routers.tethys-api-https.rule=Host(`${DOMAIN1?Variable not set}`)
+        # - traefik.http.routers.tethys-api-https.entrypoints=https
+        # - traefik.http.routers.tethys-api-https.tls=true
+        # - traefik.http.routers.tethys-api-https.tls.certresolver=le
         - traefik.http.services.tethys-api.loadbalancer.server.port=8079
   wai-vis:
     image: tethysts/tethys-wai-vis:dev
@@ -65,8 +65,8 @@ services:
         - traefik.http.routers.tethys-wai-http.rule=Host(`${DOMAIN2?Variable not set}`)
         - traefik.http.routers.tethys-wai-http.entrypoints=http
         # - traefik.http.routers.tethys-wai-http.middlewares=https-redirect
-        - traefik.http.routers.tethys-wai-https.rule=Host(`${DOMAIN2?Variable not set}`)
-        - traefik.http.routers.tethys-wai-https.entrypoints=https
-        - traefik.http.routers.tethys-wai-https.tls=true
-        - traefik.http.routers.tethys-wai-https.tls.certresolver=le
+        # - traefik.http.routers.tethys-wai-https.rule=Host(`${DOMAIN2?Variable not set}`)
+        # - traefik.http.routers.tethys-wai-https.entrypoints=https
+        # - traefik.http.routers.tethys-wai-https.tls=true
+        # - traefik.http.routers.tethys-wai-https.tls.certresolver=le
         - traefik.http.services.tethys-wai.loadbalancer.server.port=8078
