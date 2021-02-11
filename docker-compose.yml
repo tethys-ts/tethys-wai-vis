@@ -21,9 +21,9 @@ services:
     #   - "27017:27017"
   db-init:
     image: tethysts/tethys-db-initialize:dev
-    restart_policy:
-      condition: none
     deploy:
+      restart_policy:
+        condition: none
       placement:
         constraints:
           - node.role == manager
