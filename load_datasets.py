@@ -20,8 +20,8 @@ with open(os.path.join(base_dir, 'parameters.yml')) as param:
 
 remotes = param['remotes']
 
-url = 'http://tethys-ts.xyz/tethys/data/add_datasets'
-
+url = 'https://api.tethys-ts.xyz/tethys/data/add_datasets'
+# url = 'http://127.0.0.1:8080/tethys/data/add_datasets'
 ##################################################
 ### Load datasets
 

@@ -1,9 +1,9 @@
-version: '3'
+version: '3.3'
 
 networks:
   net:
     driver: overlay
-    # attachable: true
+    attachable: true
   traefik-public:
     external: true
 
