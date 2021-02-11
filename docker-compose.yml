@@ -3,7 +3,7 @@ version: '3'
 networks:
   net:
     driver: overlay
-    attachable: true
+    # attachable: true
   traefik-public:
     external: true
 
