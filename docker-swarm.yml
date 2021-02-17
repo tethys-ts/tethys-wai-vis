@@ -29,8 +29,8 @@ services:
           - node.role == manager
     networks:
       - net
-    # volumes:
-    #     - "~/git/tethys/tethys-web-service/parameters.yml:/parameters.yml"
+    volumes:
+        - "~/git/tethys/tethys-wai-vis/parameters.yml:/parameters.yml"
     depends_on:
       - "db"
   web-service:
