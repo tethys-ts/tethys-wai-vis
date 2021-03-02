@@ -562,9 +562,9 @@ def get_data(sites, start_date, end_date, dataset_id):
             ts1 = dc.decompress(ts_r.content).decode()
 
             return ts1
-#
-#
-#
+
+
+
 @app.callback(
     Output('selected-data', 'figure'),
     [Input('ts_data', 'children')],
@@ -629,19 +629,25 @@ def update_table(dataset_id, datasets):
         return [dataset_table1]
 
 
-# @app.callback(
-#     Output('download-tsdata', 'href'),
-#     [Input('ts_data', 'children')],
-#     [State('sites', 'value'), State('dataset_id', 'children')])
-# def download_tsdata(ts_data, sites, dataset_id):
-#     if dataset_id:
-#         if sites:
-#             ts_data1 = pd.DataFrame(orjson.loads(ts_data))
-#             ts_data1['from_date'] = pd.to_datetime(ts_data1['from_date'])
-#
-#             csv_string = ts_data1.to_csv(index=False, encoding='utf-8')
-#             csv_string = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string)
-#             return csv_string
+@app.callback(
+    Output('download-tsdata', 'href'),
+    [Input('ts_data', 'children')],
+    [State('sites', 'value'), State('dataset_id', 'children')])
+def download_tsdata(ts_data, sites, dataset_id):
+    if dataset_id:
+        if sites:
+            ts1 = orjson.loads(ts_data)
+            x1 = ts1['coords']['time']['data']
+            y1 = ts1['data']
+            param = ts1['attrs']['parameter']
+
+            ts2 = pd.DataFrame({'from_date': x1, param: y1})
+
+            ts2['from_date'] = pd.to_datetime(ts2['from_date'])
+
+            csv_string = ts2.to_csv(index=False, encoding='utf-8')
+            csv_string = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string)
+            return csv_string
 
 
 # @app.callback(
