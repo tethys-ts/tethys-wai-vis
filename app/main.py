@@ -83,6 +83,8 @@ def build_table(site_summ, dataset):
     return table1
 
 
+table_cols = ['Station reference', 'Station Name', 'Min Value', 'Max Value', 'Units', 'Precision', 'Start Date', 'End Date']
+
 ts_plot_height = 600
 map_height = 700
 
@@ -101,8 +103,6 @@ map_layout = dict(mapbox = dict(layers = [], accesstoken = mapbox_access_token, 
 # @server.route('/wai-vis')
 # def main():
 def serve_layout():
-
-    dc = zstd.ZstdDecompressor()
 
     datasets = requests.get(base_url + 'get_datasets').json()
 
@@ -132,9 +132,9 @@ def serve_layout():
     utc_offsets = list(set([f['utc_offset'] for f in requested_datasets]))
     utc_offsets.sort()
 
-    init_dataset = [d for d in requested_datasets if (d['feature'] == 'waterway') and (d['parameter'] == 'streamflow') and (d['product_code'] == 'quality_controlled_data') and (d['owner'] == 'Environment Canterbury')][0]
+    # init_dataset = [d for d in requested_datasets if (d['feature'] == 'waterway') and (d['parameter'] == 'streamflow') and (d['product_code'] == 'quality_controlled_data') and (d['owner'] == 'Environment Canterbury')][0]
 
-    init_dataset_id = init_dataset['dataset_id']
+    # init_dataset_id = init_dataset['dataset_id']
 
     dataset_table_cols = {'license': 'Data License', 'attribution': 'Attribution'}
 
@@ -146,20 +146,20 @@ def serve_layout():
     #
     # new_sites = init_summ.drop_duplicates('ExtSiteID')
 
-    init_summ_r = requests.post(base_url + 'get_stations', params={'dataset_id': init_dataset_id, 'compression': 'zstd'})
+    # init_summ_r = requests.post(base_url + 'get_stations', params={'dataset_id': init_dataset_id, 'compression': 'zstd'})
 
-    init_summ = orjson.loads(dc.decompress(init_summ_r.content))
-    init_summ = [s for s in init_summ if (pd.Timestamp(s['stats']['to_date']).tz_localize(None) > start_date) and (pd.Timestamp(s['stats']['from_date']).tz_localize(None) < max_date)]
+    # init_summ = orjson.loads(dc.decompress(init_summ_r.content))
+    # init_summ = [s for s in init_summ if (pd.Timestamp(s['stats']['to_date']).tz_localize(None) > start_date) and (pd.Timestamp(s['stats']['from_date']).tz_localize(None) < max_date)]
 
-    init_sites = [{'label': s['ref'], 'value': s['station_id']} for s in init_summ]
+    # init_sites = [{'label': s['ref'], 'value': s['station_id']} for s in init_summ]
 
-    init_site_id = [s['value'] for s in init_sites if s['label'] == '70105'][0]
+    # init_site_id = [s['value'] for s in init_sites if s['label'] == '70105'][0]
 
-    init_lon = [l['geometry']['coordinates'][0] for l in init_summ]
-    init_lat = [l['geometry']['coordinates'][1] for l in init_summ]
-    init_names = [l['ref'] + '<br>' + l['name'] if 'name' in l else l['ref'] for l in init_summ]
+    # init_lon = [l['geometry']['coordinates'][0] for l in init_summ]
+    # init_lat = [l['geometry']['coordinates'][1] for l in init_summ]
+    # init_names = [l['ref'] + '<br>' + l['name'] if 'name' in l else l['ref'] for l in init_summ]
 
-    init_table = build_table(init_summ, init_dataset)
+    # init_table = build_table(init_summ, init_dataset)
 
     # init_ts_r = requests.get(base_url + 'time_series_results', params={'dataset_id': init_dataset_id, 'site_id': init_site_id, 'compression': 'zstd', 'from_date': start_date.round('s').isoformat(), 'to_date': max_date.round('s').isoformat()})
     # dc = zstd.ZstdDecompressor()
@@ -274,8 +274,8 @@ def serve_layout():
             style={'margin': 50}),
         dash_table.DataTable(
             id='summ_table',
-            columns=[{"name": i, "id": i, 'deletable': True} for i in init_table[0].keys()],
-            data=init_table,
+            columns=[{"name": i, "id": i} for i in table_cols],
+            data=[],
             sort_action="native",
             sort_mode="multi",
             style_cell={
@@ -286,8 +286,8 @@ def serve_layout():
     ], className='six columns', style={'margin': 10, 'height': 900}),
     html.Div(id='ts_data', style={'display': 'none'}),
     html.Div(id='datasets', style={'display': 'none'}, children=orjson.dumps(datasets).decode()),
-    html.Div(id='dataset_id', style={'display': 'none'}, children=init_dataset_id),
-    html.Div(id='sites_summ', style={'display': 'none'}, children=orjson.dumps(init_summ).decode())
+    html.Div(id='dataset_id', style={'display': 'none'}),
+    html.Div(id='sites_summ', style={'display': 'none'})
     # dcc.Store(id='map_layout', data=orjson.dumps(map_layout).decode())
 #     dcc.Graph(id='map-layout', style={'display': 'none'}, figure=dict(data=[], layout=map_layout))
 ], style={'margin':0})
@@ -662,7 +662,7 @@ def display_data(ts_data, sites, dataset_id, start_date, end_date):
     Output('dataset_table', 'data'),
     [Input('dataset_id', 'children')],
     [State('datasets', 'children')])
-def update_table(dataset_id, datasets):
+def update_ds_table(dataset_id, datasets):
     if dataset_id:
         # dataset_table_cols = {'license': 'Data License', 'attribution': 'Attribution'}
 
