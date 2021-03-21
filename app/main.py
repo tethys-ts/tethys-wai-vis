@@ -36,32 +36,32 @@ app = dash.Dash(__name__, server=server,  url_base_pathname = '/')
 base_url = 'http://tethys-api-ext:80/tethys/data/'
 
 
-def dataset_filter(dataset_id: Optional[str] = None, feature: Optional[str] = None, parameter: Optional[str] = None, method: Optional[str] = None, product_code: Optional[str] = None, owner: Optional[str] = None, aggregation_statistic: Optional[str] = None, frequency_interval: Optional[str] = None, utc_offset: Optional[str] = None):
-    """
+# def dataset_filter(dataset_id: Optional[str] = None, feature: Optional[str] = None, parameter: Optional[str] = None, method: Optional[str] = None, product_code: Optional[str] = None, owner: Optional[str] = None, aggregation_statistic: Optional[str] = None, frequency_interval: Optional[str] = None, utc_offset: Optional[str] = None):
+#     """
 
-    """
-    q_dict = {}
+#     """
+#     q_dict = {}
 
-    if isinstance(dataset_id, str):
-        q_dict.update({'dataset_id': dataset_id})
-    if isinstance(feature, str):
-        q_dict.update({'feature': feature})
-    if isinstance(parameter, str):
-        q_dict.update({'parameter': parameter})
-    if isinstance(method, str):
-        q_dict.update({'method': method})
-    if isinstance(product_code, str):
-        q_dict.update({'product_code': product_code})
-    if isinstance(owner, str):
-        q_dict.update({'owner': owner})
-    if isinstance(aggregation_statistic, str):
-        q_dict.update({'aggregation_statistic': aggregation_statistic})
-    if isinstance(frequency_interval, str):
-        q_dict.update({'frequency_interval': frequency_interval})
-    if isinstance(utc_offset, str):
-        q_dict.update({'utc_offset': utc_offset})
+#     if isinstance(dataset_id, str):
+#         q_dict.update({'dataset_id': dataset_id})
+#     if isinstance(feature, str):
+#         q_dict.update({'feature': feature})
+#     if isinstance(parameter, str):
+#         q_dict.update({'parameter': parameter})
+#     if isinstance(method, str):
+#         q_dict.update({'method': method})
+#     if isinstance(product_code, str):
+#         q_dict.update({'product_code': product_code})
+#     if isinstance(owner, str):
+#         q_dict.update({'owner': owner})
+#     if isinstance(aggregation_statistic, str):
+#         q_dict.update({'aggregation_statistic': aggregation_statistic})
+#     if isinstance(frequency_interval, str):
+#         q_dict.update({'frequency_interval': frequency_interval})
+#     if isinstance(utc_offset, str):
+#         q_dict.update({'utc_offset': utc_offset})
 
-    return q_dict
+#     return q_dict
 
 
 
@@ -169,21 +169,21 @@ def serve_layout():
     html.Div([
         html.P(children='Filter datasets (select from top to bottom):'),
         html.Label('Feature'),
-        dcc.Dropdown(options=[{'label': d, 'value': d} for d in features], value='waterway', id='features'),
+        dcc.Dropdown(options=[{'label': d, 'value': d} for d in features], value=None, id='features'),
         html.Label('Parameter'),
-        dcc.Dropdown(options=[{'label': d, 'value': d} for d in parameters], value='streamflow', id='parameters'),
+        dcc.Dropdown(options=[{'label': d, 'value': d} for d in parameters], value=None, id='parameters'),
         html.Label('Method'),
-        dcc.Dropdown(options=[{'label': d, 'value': d} for d in methods], value='sensor_recording', id='methods'),
+        dcc.Dropdown(options=[{'label': d, 'value': d} for d in methods], value=None, id='methods'),
         html.Label('Product Code'),
-        dcc.Dropdown(options=[{'label': d, 'value': d} for d in product_codes], value='quality_controlled_data', id='product_codes'),
+        dcc.Dropdown(options=[{'label': d, 'value': d} for d in product_codes], value=None, id='product_codes'),
         html.Label('Data Owner'),
-        dcc.Dropdown(options=[{'label': d, 'value': d} for d in owners], value=owners[0], id='owners'),
+        dcc.Dropdown(options=[{'label': d, 'value': d} for d in owners], value=None, id='owners'),
         html.Label('Aggregation Statistic'),
-        dcc.Dropdown(options=[{'label': d, 'value': d} for d in aggregation_statistics], value='mean', id='aggregation_statistics'),
+        dcc.Dropdown(options=[{'label': d, 'value': d} for d in aggregation_statistics], value=None, id='aggregation_statistics'),
         html.Label('Frequency Interval'),
-        dcc.Dropdown(options=[{'label': d, 'value': d} for d in frequency_intervals], value='1H', id='frequency_intervals'),
+        dcc.Dropdown(options=[{'label': d, 'value': d} for d in frequency_intervals], value=None, id='frequency_intervals'),
         html.Label('UTC Offset'),
-        dcc.Dropdown(options=[{'label': d, 'value': d} for d in utc_offsets], value='0H', id='utc_offsets'),
+        dcc.Dropdown(options=[{'label': d, 'value': d} for d in utc_offsets], value=None, id='utc_offsets'),
         html.Label('Date Range'),
         dcc.DatePickerRange(
             end_date=str(max_date.date()),
@@ -193,7 +193,8 @@ def serve_layout():
 #               start_date_placeholder_text='DD/MM/YYYY'
             ),
         html.Label('Station reference ID'),
-        dcc.Dropdown(options=init_sites, id='sites')
+        # dcc.Dropdown(options=init_sites, id='sites')
+        dcc.Dropdown(options=[], id='sites')
         # html.Label('Water quality below detection limit method'),
         # dcc.RadioItems(
         #     options=[
@@ -206,14 +207,15 @@ def serve_layout():
     className='two columns', style={'margin': 20}),
 
     html.Div([
-        html.P('Click on a station or "box select" multiple stations:', style={'display': 'inline-block'}),
+        html.P('Click on a station to view the time series data:', style={'display': 'inline-block'}),
         dcc.Graph(
                 id = 'site-map',
                 style={'height': map_height},
                 figure=dict(
-                        data = [dict(lat = init_lat,
-                                    lon = init_lon,
-                                    text = init_names,
+                        data = [dict(
+                                    # lat = init_lat,
+                                    # lon = init_lon,
+                                    # text = init_names,
                                     type = 'scattermapbox',
                                     hoverinfo = 'text',
                                     marker = dict(
@@ -299,47 +301,46 @@ app.layout = serve_layout
 ### Callbacks
 
 
-@app.callback(
-    [Output('parameters', 'options'), Output('methods', 'options'), Output('product_codes', 'options'), Output('owners', 'options'), Output('aggregation_statistics', 'options'), Output('frequency_intervals', 'options'), Output('utc_offsets', 'options')],
-    [Input('features', 'value')],
-    # [State('parameters', 'options'), State('methods', 'options'), State('product_codes', 'options'), State('owners', 'options'), State('aggregation_statistics', 'options'), State('frequency_intervals', 'options'), State('utc_offsets', 'options')]
-    [State('datasets', 'children')])
-def update_parameters1(features, datasets):
+# @app.callback(
+#     [Output('features', 'options'), Output('parameters', 'options'), Output('methods', 'options'), Output('product_codes', 'options'), Output('owners', 'options'), Output('aggregation_statistics', 'options'), Output('frequency_intervals', 'options'), Output('utc_offsets', 'options')],
+#     [Input('features', 'value'), Input('parameters', 'value'), Input('methods', 'value'), Input('product_codes', 'value'), Input('owners', 'value'), Input('aggregation_statistics', 'value'), Input('frequency_intervals', 'value'), Input('utc_offsets', 'value')],
+#     [State('datasets', 'children')])
+# def update_parameters(features, parameters, methods, product_codes, owners, aggregation_statistics, frequency_intervals, utc_offsets, datasets):
 
-    def make_options(val):
-        l1 = [{'label': v, 'value': v} for v in val]
-        return l1
+#     def make_options(val):
+#         l1 = [{'label': v, 'value': v} for v in val]
+#         return l1
 
-    datasets1 = orjson.loads(datasets)
-    datasets2 = [d for d in datasets1 if d['feature'] == features]
+#     datasets1 = orjson.loads(datasets)
+#     datasets2 = [d for d in datasets1 if d['feature'] == features]
 
-    # print(datasets2)
+#     # print(datasets2)
 
-    # features = list(set([d['feature'] for d in datasets2]))
-    # features.sort()
+#     # features = list(set([d['feature'] for d in datasets2]))
+#     # features.sort()
 
-    parameters = list(set([d['parameter'] for d in datasets2]))
-    parameters.sort()
+#     parameters = list(set([d['parameter'] for d in datasets2]))
+#     parameters.sort()
 
-    methods = list(set([d['method'] for d in datasets2]))
-    methods.sort()
+#     methods = list(set([d['method'] for d in datasets2]))
+#     methods.sort()
 
-    product_codes = list(set([d['product_code'] for d in datasets2]))
-    product_codes.sort()
+#     product_codes = list(set([d['product_code'] for d in datasets2]))
+#     product_codes.sort()
 
-    owners = list(set([d['owner'] for d in datasets2]))
-    owners.sort()
+#     owners = list(set([d['owner'] for d in datasets2]))
+#     owners.sort()
 
-    aggregation_statistics = list(set([d['aggregation_statistic'] for d in datasets2]))
-    aggregation_statistics.sort()
+#     aggregation_statistics = list(set([d['aggregation_statistic'] for d in datasets2]))
+#     aggregation_statistics.sort()
 
-    frequency_intervals = list(set([d['frequency_interval'] for d in datasets2]))
-    frequency_intervals.sort()
+#     frequency_intervals = list(set([d['frequency_interval'] for d in datasets2]))
+#     frequency_intervals.sort()
 
-    utc_offsets = list(set([d['utc_offset'] for d in datasets2]))
-    utc_offsets.sort()
+#     utc_offsets = list(set([d['utc_offset'] for d in datasets2]))
+#     utc_offsets.sort()
 
-    return make_options(parameters), make_options(methods), make_options(product_codes), make_options(owners), make_options(aggregation_statistics), make_options(frequency_intervals), make_options(utc_offsets)
+#     return make_options(parameters), make_options(methods), make_options(product_codes), make_options(owners), make_options(aggregation_statistics), make_options(frequency_intervals), make_options(utc_offsets)
 
 
 # @app.callback(
@@ -427,16 +428,67 @@ def update_parameters1(features, datasets):
 #     return make_options(features), make_options(parameters), make_options(methods), make_options(product_codes), make_options(owners), make_options(aggregation_statistics), make_options(frequency_intervals), make_options(utc_offsets)
 
 @app.callback(
-    Output('dataset_id', 'children'), [Input('features', 'value'), Input('parameters', 'value'), Input('methods', 'value'), Input('product_codes', 'value'), Input('owners', 'value'), Input('aggregation_statistics', 'value'), Input('frequency_intervals', 'value'), Input('utc_offsets', 'value')], [State('datasets', 'children')])
+    [Output('features', 'options'), Output('parameters', 'options'), Output('methods', 'options'), Output('product_codes', 'options'), Output('owners', 'options'), Output('aggregation_statistics', 'options'), Output('frequency_intervals', 'options'), Output('utc_offsets', 'options'), Output('dataset_id', 'children')], [Input('features', 'value'), Input('parameters', 'value'), Input('methods', 'value'), Input('product_codes', 'value'), Input('owners', 'value'), Input('aggregation_statistics', 'value'), Input('frequency_intervals', 'value'), Input('utc_offsets', 'value')], [State('datasets', 'children')])
 def update_dataset_id(features, parameters, methods, product_codes, owners, aggregation_statistics, frequency_intervals, utc_offsets, datasets):
-    try:
-        dataset = select_dataset(features, parameters, methods, product_codes, owners, aggregation_statistics, frequency_intervals, utc_offsets, orjson.loads(datasets))
-        dataset_id = dataset['dataset_id']
 
-        print(features, parameters, methods, product_codes, owners, aggregation_statistics, frequency_intervals, utc_offsets)
-        return dataset_id
-    except:
-        print('No available dataset_id')
+    def make_options(val):
+        l1 = [{'label': v, 'value': v} for v in val]
+        return l1
+
+    datasets1 = orjson.loads(datasets)
+    if isinstance(features, str):
+        datasets1 = [d for d in datasets1 if d['feature'] == features]
+    if isinstance(parameters, str):
+        datasets1 = [d for d in datasets1 if d['parameter'] == parameters]
+    if isinstance(methods, str):
+        datasets1 = [d for d in datasets1 if d['method'] == methods]
+    if isinstance(product_codes, str):
+        datasets1 = [d for d in datasets1 if d['product_code'] == product_codes]
+    if isinstance(owners, str):
+        datasets1 = [d for d in datasets1 if d['owner'] == owners]
+    if isinstance(aggregation_statistics, str):
+        datasets1 = [d for d in datasets1 if d['aggregation_statistic'] == aggregation_statistics]
+    if isinstance(frequency_intervals, str):
+        datasets1 = [d for d in datasets1 if d['frequency_interval'] == frequency_intervals]
+    if isinstance(utc_offsets, str):
+        datasets1 = [d for d in datasets1 if d['utc_offset'] == utc_offsets]
+
+    # print(datasets1)
+
+    if isinstance(features, str) and isinstance(parameters, str) and isinstance(methods, str) and isinstance(product_codes, str) and isinstance(owners, str) and isinstance(aggregation_statistics, str) and isinstance(frequency_intervals, str) and isinstance(utc_offsets, str):
+        dataset = select_dataset(features, parameters, methods, product_codes, owners, aggregation_statistics, frequency_intervals, utc_offsets, datasets1)
+        dataset_id = dataset['dataset_id']
+    else:
+        print('Could not create dataset_id')
+        dataset_id = None
+
+    # print(dataset_id)
+
+    features = list(set([d['feature'] for d in datasets1]))
+    features.sort()
+
+    parameters = list(set([d['parameter'] for d in datasets1]))
+    parameters.sort()
+
+    methods = list(set([d['method'] for d in datasets1]))
+    methods.sort()
+
+    product_codes = list(set([d['product_code'] for d in datasets1]))
+    product_codes.sort()
+
+    owners = list(set([d['owner'] for d in datasets1]))
+    owners.sort()
+
+    aggregation_statistics = list(set([d['aggregation_statistic'] for d in datasets1]))
+    aggregation_statistics.sort()
+
+    frequency_intervals = list(set([d['frequency_interval'] for d in datasets1]))
+    frequency_intervals.sort()
+
+    utc_offsets = list(set([d['utc_offset'] for d in datasets1]))
+    utc_offsets.sort()
+
+    return make_options(features), make_options(parameters), make_options(methods), make_options(product_codes), make_options(owners), make_options(aggregation_statistics), make_options(frequency_intervals), make_options(utc_offsets), dataset_id
 
 
 @app.callback(
@@ -475,7 +527,7 @@ def update_site_list(sites_summ):
         [State('site-map', 'figure')])
 def update_display_map(sites_summ, figure):
     if sites_summ is None:
-        print('Clear the sites')
+        # print('Clear the sites')
         data1 = figure['data'][0]
         if 'hoverinfo' in data1:
             data1.pop('hoverinfo')
@@ -662,10 +714,8 @@ def download_tsdata(ts_data, sites, dataset_id):
 
 
 if __name__ == '__main__':
-    # server.run(debug=True, host='0.0.0.0', port=80)
     server.run(host='0.0.0.0', port=80)
 
 
-# @server.route("/wai-vis")
-# def my_dash_app():
-#     return app.index()
+# if __name__ == '__main__':
+#     app.run_server(debug=True, host='0.0.0.0', port=8080)
