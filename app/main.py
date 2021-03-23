@@ -78,12 +78,12 @@ def build_table(site_summ, dataset):
     """
 
     """
-    table1 = [{'Station reference': s['ref'], 'Station Name': s['name'], 'Min Value': s['stats']['min'], 'Max Value': s['stats']['max'], 'Units': dataset['units'], 'Precision': dataset['precision'], 'Start Date': s['stats']['from_date'], 'End Date': s['stats']['to_date']} for s in site_summ]
+    table1 = [{'Station reference': s['ref'], 'Station Name': s['name'], 'Min Value': s['stats']['min'], 'Max Value': s['stats']['max'], 'Units': dataset['units'], 'Precision': dataset['precision'], 'Start Date': s['stats']['from_date'], 'End Date': s['stats']['to_date'], 'lon': s['geometry']['coordinates'][0], 'lat': s['geometry']['coordinates'][1]} for s in site_summ]
 
     return table1
 
 
-table_cols = ['Station reference', 'Station Name', 'Min Value', 'Max Value', 'Units', 'Precision', 'Start Date', 'End Date']
+table_cols = ['Station reference', 'Station Name', 'Min Value', 'Max Value', 'Units', 'Precision', 'Start Date', 'End Date', 'lon', 'lat']
 
 ts_plot_height = 600
 map_height = 700
@@ -462,7 +462,7 @@ def update_dataset_id(features, parameters, methods, product_codes, owners, aggr
         print('Could not create dataset_id')
         dataset_id = None
 
-    # print(dataset_id)
+    print(dataset_id)
 
     features = list(set([d['feature'] for d in datasets1]))
     features.sort()
@@ -503,6 +503,7 @@ def update_summ_data(dataset_id, start_date, end_date):
         dc = zstd.ZstdDecompressor()
         summ_data1 = orjson.loads(dc.decompress(summ_r.content).decode())
         summ_data2 = [s for s in summ_data1 if (pd.Timestamp(s['stats']['to_date']).tz_localize(None) > pd.Timestamp(start_date)) and (pd.Timestamp(s['stats']['from_date']).tz_localize(None) < pd.Timestamp(end_date))]
+        [s.update({'ref': ''}) for s in summ_data2 if not 'ref' in s]
         summ_json = orjson.dumps(summ_data2).decode()
 
         return summ_json
