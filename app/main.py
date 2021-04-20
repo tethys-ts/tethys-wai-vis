@@ -13,6 +13,7 @@ import zstandard as zstd
 import orjson
 import flask
 from typing import Optional, List, Any
+from flask_caching import Cache
 # from tethysts.utils import get_results_obj_s3, result_filters, process_results_output
 # from util import app_ts_summ, sel_ts_summ, ecan_ts_data
 
@@ -34,6 +35,16 @@ app = dash.Dash(__name__, server=server,  url_base_pathname = '/')
 # base_url = 'host.docker.internal/tethys/data/'
 # base_url = 'https://api.tethys-ts.xyz/tethys/data/'
 base_url = 'http://tethys-api-ext:80/tethys/data/'
+
+
+cache_config = {
+    # "DEBUG": True,          # some Flask specific configs
+    "CACHE_TYPE": "FileSystemCache",  # Flask-Caching related configs
+    "CACHE_DEFAULT_TIMEOUT": 60*60,
+    'CACHE_DIR': '/cache'
+}
+
+cache = Cache(server, config=cache_config)
 
 
 # def dataset_filter(dataset_id: Optional[str] = None, feature: Optional[str] = None, parameter: Optional[str] = None, method: Optional[str] = None, product_code: Optional[str] = None, owner: Optional[str] = None, aggregation_statistic: Optional[str] = None, frequency_interval: Optional[str] = None, utc_offset: Optional[str] = None):
@@ -429,6 +440,7 @@ app.layout = serve_layout
 
 @app.callback(
     [Output('features', 'options'), Output('parameters', 'options'), Output('methods', 'options'), Output('product_codes', 'options'), Output('owners', 'options'), Output('aggregation_statistics', 'options'), Output('frequency_intervals', 'options'), Output('utc_offsets', 'options'), Output('dataset_id', 'children')], [Input('features', 'value'), Input('parameters', 'value'), Input('methods', 'value'), Input('product_codes', 'value'), Input('owners', 'value'), Input('aggregation_statistics', 'value'), Input('frequency_intervals', 'value'), Input('utc_offsets', 'value')], [State('datasets', 'children')])
+@cache.memoize(timeout=60*60)
 def update_dataset_id(features, parameters, methods, product_codes, owners, aggregation_statistics, frequency_intervals, utc_offsets, datasets):
 
     def make_options(val):
@@ -494,6 +506,7 @@ def update_dataset_id(features, parameters, methods, product_codes, owners, aggr
 @app.callback(
     Output('sites_summ', 'children'),
     [Input('dataset_id', 'children'), Input('date_sel', 'start_date'), Input('date_sel', 'end_date')])
+@cache.memoize(timeout=60*60)
 def update_summ_data(dataset_id, start_date, end_date):
     if dataset_id is None:
         print('No new sites_summ')
@@ -526,6 +539,7 @@ def update_site_list(sites_summ):
         Output('site-map', 'figure'),
         [Input('sites_summ', 'children')],
         [State('site-map', 'figure')])
+@cache.memoize(timeout=60*60)
 def update_display_map(sites_summ, figure):
     if sites_summ is None:
         # print('Clear the sites')
@@ -607,6 +621,7 @@ def update_table(sites_summ, sites, selectedData, clickData, datasets, dataset_i
 @app.callback(
     Output('ts_data', 'children'),
     [Input('sites', 'value'), Input('date_sel', 'start_date'), Input('date_sel', 'end_date'), Input('dataset_id', 'children')])
+@cache.memoize(timeout=60*60)
 def get_data(sites, start_date, end_date, dataset_id):
     if dataset_id:
         if sites:
@@ -622,6 +637,7 @@ def get_data(sites, start_date, end_date, dataset_id):
     Output('selected-data', 'figure'),
     [Input('ts_data', 'children')],
     [State('sites', 'value'), State('dataset_id', 'children'), State('date_sel', 'start_date'), State('date_sel', 'end_date')])
+@cache.memoize(timeout=60*60)
 def display_data(ts_data, sites, dataset_id, start_date, end_date):
 
     base_dict = dict(
@@ -663,6 +679,7 @@ def display_data(ts_data, sites, dataset_id, start_date, end_date):
     Output('dataset_table', 'data'),
     [Input('dataset_id', 'children')],
     [State('datasets', 'children')])
+@cache.memoize(timeout=60*60)
 def update_ds_table(dataset_id, datasets):
     if dataset_id:
         # dataset_table_cols = {'license': 'Data License', 'attribution': 'Attribution'}
