@@ -625,7 +625,7 @@ def update_table(sites_summ, sites, selectedData, clickData, datasets, dataset_i
 def get_data(sites, start_date, end_date, dataset_id):
     if dataset_id:
         if sites:
-            ts_r = requests.get(base_url + 'get_results', params={'dataset_id': dataset_id, 'station_id': sites, 'compression': 'zstd', 'from_date': start_date+'T00:00', 'to_date': end_date+'T00:00', 'remove_height': True})
+            ts_r = requests.get(base_url + 'get_results', params={'dataset_id': dataset_id, 'station_id': sites, 'compression': 'zstd', 'from_date': start_date+'T00:00', 'to_date': end_date+'T00:00', 'squeeze_dims': True})
             dc = zstd.ZstdDecompressor()
             ts1 = dc.decompress(ts_r.content).decode()
 
