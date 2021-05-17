@@ -658,7 +658,9 @@ def display_data(ts_data, sites, dataset_id, start_date, end_date):
     ts1 = orjson.loads(ts_data)
 
     x1 = ts1['coords']['time']['data']
-    y1 = ts1['data']
+    data_vars = ts1['data_vars']
+    parameter = [t for t in data_vars if 'dataset_id' in data_vars[t]['attrs']][0]
+    y1 = data_vars[parameter]['data']
 
     set1 = go.Scattergl(
             x=x1,
