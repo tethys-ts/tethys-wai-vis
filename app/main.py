@@ -33,8 +33,8 @@ app = dash.Dash(__name__, server=server,  url_base_pathname = '/')
 # base_url = 'http://tethys-ts.xyz/tethys/data/'
 # base_url = 'http://127.0.0.1:8080/tethys/data/'
 # base_url = 'host.docker.internal/tethys/data/'
-# base_url = 'https://api.tethys-ts.xyz/tethys/data/'
-base_url = 'http://tethys-api-ext:80/tethys/data/'
+base_url = 'https://api.tethys-ts.xyz/tethys/data/'
+# base_url = 'http://tethys-api-ext:80/tethys/data/'
 
 
 cache_config = {
@@ -440,7 +440,7 @@ app.layout = serve_layout
 
 @app.callback(
     [Output('features', 'options'), Output('parameters', 'options'), Output('methods', 'options'), Output('product_codes', 'options'), Output('owners', 'options'), Output('aggregation_statistics', 'options'), Output('frequency_intervals', 'options'), Output('utc_offsets', 'options'), Output('dataset_id', 'children')], [Input('features', 'value'), Input('parameters', 'value'), Input('methods', 'value'), Input('product_codes', 'value'), Input('owners', 'value'), Input('aggregation_statistics', 'value'), Input('frequency_intervals', 'value'), Input('utc_offsets', 'value')], [State('datasets', 'children')])
-@cache.memoize(timeout=60*60)
+@cache.memoize()
 def update_dataset_id(features, parameters, methods, product_codes, owners, aggregation_statistics, frequency_intervals, utc_offsets, datasets):
 
     def make_options(val):
@@ -506,7 +506,7 @@ def update_dataset_id(features, parameters, methods, product_codes, owners, aggr
 @app.callback(
     Output('sites_summ', 'children'),
     [Input('dataset_id', 'children'), Input('date_sel', 'start_date'), Input('date_sel', 'end_date')])
-@cache.memoize(timeout=60*60)
+@cache.memoize()
 def update_summ_data(dataset_id, start_date, end_date):
     if dataset_id is None:
         print('No new sites_summ')
@@ -539,7 +539,7 @@ def update_site_list(sites_summ):
         Output('site-map', 'figure'),
         [Input('sites_summ', 'children')],
         [State('site-map', 'figure')])
-@cache.memoize(timeout=60*60)
+@cache.memoize()
 def update_display_map(sites_summ, figure):
     if sites_summ is None:
         # print('Clear the sites')
@@ -621,7 +621,7 @@ def update_table(sites_summ, sites, selectedData, clickData, datasets, dataset_i
 @app.callback(
     Output('ts_data', 'children'),
     [Input('sites', 'value'), Input('date_sel', 'start_date'), Input('date_sel', 'end_date'), Input('dataset_id', 'children')])
-@cache.memoize(timeout=60*60)
+@cache.memoize()
 def get_data(sites, start_date, end_date, dataset_id):
     if dataset_id:
         if sites:
@@ -637,13 +637,13 @@ def get_data(sites, start_date, end_date, dataset_id):
     Output('selected-data', 'figure'),
     [Input('ts_data', 'children')],
     [State('sites', 'value'), State('dataset_id', 'children'), State('date_sel', 'start_date'), State('date_sel', 'end_date')])
-@cache.memoize(timeout=60*60)
+@cache.memoize()
 def display_data(ts_data, sites, dataset_id, start_date, end_date):
 
     base_dict = dict(
             data = [dict(x=0, y=0)],
             layout = dict(
-                title='Click-drag on the map to select sites',
+                title='Click on the map to select a station',
                 paper_bgcolor = '#F4F4F8',
                 plot_bgcolor = '#F4F4F8'
                 )
@@ -681,7 +681,7 @@ def display_data(ts_data, sites, dataset_id, start_date, end_date):
     Output('dataset_table', 'data'),
     [Input('dataset_id', 'children')],
     [State('datasets', 'children')])
-@cache.memoize(timeout=60*60)
+@cache.memoize()
 def update_ds_table(dataset_id, datasets):
     if dataset_id:
         # dataset_table_cols = {'license': 'Data License', 'attribution': 'Attribution'}
