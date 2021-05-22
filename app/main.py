@@ -710,10 +710,11 @@ def download_tsdata(ts_data, sites, dataset_id):
         if sites:
             ts1 = orjson.loads(ts_data)
             x1 = ts1['coords']['time']['data']
-            y1 = ts1['data']
-            param = ts1['attrs']['parameter']
+            data_vars = ts1['data_vars']
+            parameter = [t for t in data_vars if 'dataset_id' in data_vars[t]['attrs']][0]
+            y1 = data_vars[parameter]['data']
 
-            ts2 = pd.DataFrame({'from_date': x1, param: y1})
+            ts2 = pd.DataFrame({'from_date': x1, parameter: y1})
 
             ts2['from_date'] = pd.to_datetime(ts2['from_date'])
 
