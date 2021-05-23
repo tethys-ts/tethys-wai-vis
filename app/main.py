@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import io
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -14,6 +15,7 @@ import orjson
 import flask
 from typing import Optional, List, Any
 from flask_caching import Cache
+import xarray as xr
 # from tethysts.utils import get_results_obj_s3, result_filters, process_results_output
 # from util import app_ts_summ, sel_ts_summ, ecan_ts_data
 
@@ -44,7 +46,7 @@ cache_config = {
     'CACHE_DIR': '/cache'
 }
 
-cache = Cache(server, config=cache_config)
+# cache = Cache(server, config=cache_config)
 
 
 # def dataset_filter(dataset_id: Optional[str] = None, feature: Optional[str] = None, parameter: Optional[str] = None, method: Optional[str] = None, product_code: Optional[str] = None, owner: Optional[str] = None, aggregation_statistic: Optional[str] = None, frequency_interval: Optional[str] = None, utc_offset: Optional[str] = None):
@@ -276,13 +278,17 @@ def serve_layout():
                 ),
             config={"displaylogo": False}
             ),
-        html.A(
-            'Download Time Series Data',
-            id='download-tsdata',
-            download="tsdata.csv",
-            href="",
-            target="_blank",
-            style={'margin': 50}),
+        # html.A(
+        #     'Download Time Series Data',
+        #     id='download-tsdata',
+        #     download="tsdata.csv",
+        #     href="",
+        #     target="_blank",
+        #     style={'margin': 50}),
+        html.Button("Download CSV", id="btn_csv"),
+        dcc.Download(id="download-dataframe-csv"),
+        html.Button("Download netCDF", id="btn_netcdf"),
+        dcc.Download(id="download-netcdf"),
         dash_table.DataTable(
             id='summ_table',
             columns=[{"name": i, "id": i} for i in table_cols],
@@ -440,7 +446,7 @@ app.layout = serve_layout
 
 @app.callback(
     [Output('features', 'options'), Output('parameters', 'options'), Output('methods', 'options'), Output('product_codes', 'options'), Output('owners', 'options'), Output('aggregation_statistics', 'options'), Output('frequency_intervals', 'options'), Output('utc_offsets', 'options'), Output('dataset_id', 'children')], [Input('features', 'value'), Input('parameters', 'value'), Input('methods', 'value'), Input('product_codes', 'value'), Input('owners', 'value'), Input('aggregation_statistics', 'value'), Input('frequency_intervals', 'value'), Input('utc_offsets', 'value')], [State('datasets', 'children')])
-@cache.memoize()
+# @cache.memoize()
 def update_dataset_id(features, parameters, methods, product_codes, owners, aggregation_statistics, frequency_intervals, utc_offsets, datasets):
 
     def make_options(val):
@@ -506,7 +512,7 @@ def update_dataset_id(features, parameters, methods, product_codes, owners, aggr
 @app.callback(
     Output('sites_summ', 'children'),
     [Input('dataset_id', 'children'), Input('date_sel', 'start_date'), Input('date_sel', 'end_date')])
-@cache.memoize()
+# @cache.memoize()
 def update_summ_data(dataset_id, start_date, end_date):
     if dataset_id is None:
         print('No new sites_summ')
@@ -539,7 +545,7 @@ def update_site_list(sites_summ):
         Output('site-map', 'figure'),
         [Input('sites_summ', 'children')],
         [State('site-map', 'figure')])
-@cache.memoize()
+# @cache.memoize()
 def update_display_map(sites_summ, figure):
     if sites_summ is None:
         # print('Clear the sites')
@@ -621,7 +627,7 @@ def update_table(sites_summ, sites, selectedData, clickData, datasets, dataset_i
 @app.callback(
     Output('ts_data', 'children'),
     [Input('sites', 'value'), Input('date_sel', 'start_date'), Input('date_sel', 'end_date'), Input('dataset_id', 'children')])
-@cache.memoize()
+# @cache.memoize()
 def get_data(sites, start_date, end_date, dataset_id):
     if dataset_id:
         if sites:
@@ -637,7 +643,7 @@ def get_data(sites, start_date, end_date, dataset_id):
     Output('selected-data', 'figure'),
     [Input('ts_data', 'children')],
     [State('sites', 'value'), State('dataset_id', 'children'), State('date_sel', 'start_date'), State('date_sel', 'end_date')])
-@cache.memoize()
+# @cache.memoize()
 def display_data(ts_data, sites, dataset_id, start_date, end_date):
 
     base_dict = dict(
@@ -681,7 +687,7 @@ def display_data(ts_data, sites, dataset_id, start_date, end_date):
     Output('dataset_table', 'data'),
     [Input('dataset_id', 'children')],
     [State('datasets', 'children')])
-@cache.memoize()
+# @cache.memoize()
 def update_ds_table(dataset_id, datasets):
     if dataset_id:
         # dataset_table_cols = {'license': 'Data License', 'attribution': 'Attribution'}
@@ -702,10 +708,25 @@ def update_ds_table(dataset_id, datasets):
 
 
 @app.callback(
-    Output('download-tsdata', 'href'),
-    [Input('ts_data', 'children')],
-    [State('sites', 'value'), State('dataset_id', 'children')])
-def download_tsdata(ts_data, sites, dataset_id):
+    Output('download-netcdf', 'data'),
+    Input("btn_netcdf", "n_clicks"),
+    [State('ts_data', 'children'), State('sites', 'value'), State('dataset_id', 'children')], prevent_initial_call=True)
+def download_netcdf(n_clicks, ts_data, sites, dataset_id):
+    if dataset_id:
+        if sites:
+            ts1 = orjson.loads(ts_data)
+            ts2 = xr.Dataset.from_dict(ts1)
+            # b1 = io.BytesIO(ts2.to_netcdf())
+            b1 = ts2.to_netcdf()
+
+            return dcc.send_bytes(b1, 'tsdata.nc')
+
+
+@app.callback(
+    Output("download-dataframe-csv", "data"),
+    Input("btn_csv", "n_clicks"),
+    [State('ts_data', 'children'), State('sites', 'value'), State('dataset_id', 'children')], prevent_initial_call=True)
+def download_csv(n_clicks, ts_data, sites, dataset_id):
     if dataset_id:
         if sites:
             ts1 = orjson.loads(ts_data)
@@ -717,10 +738,9 @@ def download_tsdata(ts_data, sites, dataset_id):
             ts2 = pd.DataFrame({'from_date': x1, parameter: y1})
 
             ts2['from_date'] = pd.to_datetime(ts2['from_date'])
+            ts2.set_index('from_date', inplace=True)
 
-            csv_string = ts2.to_csv(index=False, encoding='utf-8')
-            csv_string = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string)
-            return csv_string
+            return dcc.send_data_frame(ts2.to_csv, "tsdata.csv")
 
 
 # @app.callback(
@@ -734,9 +754,9 @@ def download_tsdata(ts_data, sites, dataset_id):
 #     return csv_string
 
 
-if __name__ == '__main__':
-    server.run(host='0.0.0.0', port=80)
-
-
 # if __name__ == '__main__':
-#     app.run_server(debug=True, host='0.0.0.0', port=8080)
+#     server.run(host='0.0.0.0', port=80)
+
+
+if __name__ == '__main__':
+    app.run_server(debug=True, host='0.0.0.0', port=8080)
