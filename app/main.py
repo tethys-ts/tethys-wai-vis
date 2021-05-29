@@ -664,12 +664,12 @@ def display_data(ts_data, sites, dataset_id, start_date, end_date):
     ts1 = orjson.loads(ts_data)
 
     x1 = ts1['coords']['time']['data']
-    if not isinstance(x1, (list, np.array)):
+    if not isinstance(x1, (list, np.ndarray)):
         x1 = [x1]
     data_vars = ts1['data_vars']
     parameter = [t for t in data_vars if 'dataset_id' in data_vars[t]['attrs']][0]
     y1 = data_vars[parameter]['data']
-    if not isinstance(y1, (list, np.array)):
+    if not isinstance(y1, (list, np.ndarray)):
         y1 = [y1]
 
     set1 = go.Scattergl(
