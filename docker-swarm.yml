@@ -76,7 +76,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.role == manager
+          - node.hostname == uswest1.tethys-ts.xyz
           # - node.hostname == esnode2.nzrivers.xyz
       labels:
         - traefik.enable=true
