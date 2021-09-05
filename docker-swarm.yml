@@ -76,7 +76,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.hostname == uswest1.tethys-ts.xyz
+          - node.labels.function == web_server
           # - node.hostname == esnode2.nzrivers.xyz
       labels:
         - traefik.enable=true
