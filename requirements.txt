@@ -3,6 +3,7 @@ dash==1.20.0
 xarray==0.17.0
 pandas==1.2.3
 requests==2.24.0
+tethysts==0.2.16
 zstandard==0.14.0
 orjson==3.4.3
 flask-caching==1.10.1

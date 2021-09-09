@@ -16,6 +16,9 @@ import flask
 from typing import Optional, List, Any
 from flask_caching import Cache
 import xarray as xr
+from tethysts import Tethys
+import codecs
+import pickle
 # from tethysts.utils import get_results_obj_s3, result_filters, process_results_output
 # from util import app_ts_summ, sel_ts_summ, ecan_ts_data
 
@@ -35,7 +38,7 @@ app = dash.Dash(__name__, server=server,  url_base_pathname = '/')
 # base_url = 'http://tethys-ts.xyz/tethys/data/'
 # base_url = 'http://127.0.0.1:8080/tethys/data/'
 # base_url = 'host.docker.internal/tethys/data/'
-base_url = 'https://api.tethys-ts.xyz/tethys/data/'
+# base_url = 'https://api.tethys-ts.xyz/tethys/data/'
 # base_url = 'http://tethys-api-ext:80/tethys/data/'
 
 
@@ -76,6 +79,22 @@ cache = Cache(server, config=cache_config)
 
 #     return q_dict
 
+def encode_obj(obj, encoding="base64"):
+    """
+
+    """
+    e1 = codecs.encode(pickle.dumps(obj), encoding).decode()
+
+    return e1
+
+
+def decode_obj(obj, encoding="base64"):
+    """
+
+    """
+    d1 = pickle.loads(codecs.decode(obj.encode(), encoding))
+
+    return d1
 
 
 def select_dataset(features, parameters, methods, product_codes, owners, aggregation_statistics, frequency_intervals, utc_offsets, datasets):
@@ -91,7 +110,7 @@ def build_table(site_summ, dataset):
     """
 
     """
-    table1 = [{'Station reference': s['ref'], 'Station Name': s['name'], 'Min Value': s['stats']['min'], 'Max Value': s['stats']['max'], 'Units': dataset['units'], 'Precision': dataset['precision'], 'Start Date': s['stats']['from_date'], 'End Date': s['stats']['to_date'], 'lon': s['geometry']['coordinates'][0], 'lat': s['geometry']['coordinates'][1]} for s in site_summ]
+    table1 = [{'Station reference': s['ref'], 'Station Name': s['name'], 'Min Value': s['stats']['min'], 'Max Value': s['stats']['max'], 'Units': dataset['units'], 'Precision': dataset['precision'], 'Start Date': s['time_range']['from_date'], 'End Date': s['time_range']['to_date'], 'lon': s['geometry']['coordinates'][0], 'lat': s['geometry']['coordinates'][1]} for s in site_summ]
 
     return table1
 
@@ -117,7 +136,13 @@ map_layout = dict(mapbox = dict(layers = [], accesstoken = mapbox_access_token, 
 # def main():
 def serve_layout():
 
-    datasets = requests.get(base_url + 'get_datasets').json()
+    # datasets = requests.get(base_url + 'get_datasets').json()
+
+    tethys = Tethys()
+
+    datasets = tethys.datasets.copy()
+
+    datasets = [ds for ds in datasets if ds['method'] != 'simulation']
 
     requested_datasets = datasets.copy()
 
@@ -302,6 +327,7 @@ def serve_layout():
             )
     ], className='six columns', style={'margin': 10, 'height': 900}),
     html.Div(id='ts_data', style={'display': 'none'}),
+    dcc.Store(id='tethys', data=encode_obj(tethys)),
     html.Div(id='datasets', style={'display': 'none'}, children=orjson.dumps(datasets).decode()),
     html.Div(id='dataset_id', style={'display': 'none'}),
     html.Div(id='sites_summ', style={'display': 'none'})
@@ -511,17 +537,25 @@ def update_dataset_id(features, parameters, methods, product_codes, owners, aggr
 
 @app.callback(
     Output('sites_summ', 'children'),
-    [Input('dataset_id', 'children'), Input('date_sel', 'start_date'), Input('date_sel', 'end_date')])
+    [Input('dataset_id', 'children'), Input('date_sel', 'start_date'), Input('date_sel', 'end_date')],
+    [State('tethys', 'data')])
 @cache.memoize()
-def update_summ_data(dataset_id, start_date, end_date):
+def update_summ_data(dataset_id, start_date, end_date, tethys_obj):
     if dataset_id is None:
         print('No new sites_summ')
     else:
-        summ_r = requests.post(base_url + 'get_stations', params={'dataset_id': dataset_id, 'compression': 'zstd'})
+        tethys = decode_obj(tethys_obj)
+        # summ_r = requests.post(base_url + 'get_stations', params={'dataset_id': dataset_id, 'compression': 'zstd'})
 
-        dc = zstd.ZstdDecompressor()
-        summ_data1 = orjson.loads(dc.decompress(summ_r.content).decode())
-        summ_data2 = [s for s in summ_data1 if (pd.Timestamp(s['stats']['to_date']).tz_localize(None) > pd.Timestamp(start_date)) and (pd.Timestamp(s['stats']['from_date']).tz_localize(None) < pd.Timestamp(end_date))]
+        # dc = zstd.ZstdDecompressor()
+        # summ_data1 = orjson.loads(dc.decompress(summ_r.content).decode())
+
+        summ_data1 = tethys.get_stations(dataset_id)
+
+        if 'from_date' in summ_data1[0]['stats']:
+            [s.update({'time_range': {'from_date': s['stats']['from_date'], 'to_date': s['stats']['to_date']}}) for s in summ_data1]
+
+        summ_data2 = [s for s in summ_data1 if (pd.Timestamp(s['time_range']['to_date']).tz_localize(None) > pd.Timestamp(start_date)) and (pd.Timestamp(s['time_range']['from_date']).tz_localize(None) < pd.Timestamp(end_date))]
         [s.update({'ref': ''}) for s in summ_data2 if not 'ref' in s]
         summ_json = orjson.dumps(summ_data2).decode()
 
@@ -626,16 +660,21 @@ def update_table(sites_summ, sites, selectedData, clickData, datasets, dataset_i
 
 @app.callback(
     Output('ts_data', 'children'),
-    [Input('sites', 'value'), Input('date_sel', 'start_date'), Input('date_sel', 'end_date'), Input('dataset_id', 'children')])
+    [Input('sites', 'value'), Input('date_sel', 'start_date'), Input('date_sel', 'end_date'), Input('dataset_id', 'children')],
+    [State('tethys', 'data')])
 @cache.memoize()
-def get_data(sites, start_date, end_date, dataset_id):
+def get_data(sites, start_date, end_date, dataset_id, tethys_obj):
     if dataset_id:
         if sites:
-            ts_r = requests.get(base_url + 'get_results', params={'dataset_id': dataset_id, 'station_id': sites, 'compression': 'zstd', 'from_date': start_date+'T00:00', 'to_date': end_date+'T00:00', 'squeeze_dims': True})
-            dc = zstd.ZstdDecompressor()
-            ts1 = dc.decompress(ts_r.content).decode()
+            tethys = decode_obj(tethys_obj)
+            # ts_r = requests.get(base_url + 'get_results', params={'dataset_id': dataset_id, 'station_id': sites, 'compression': 'zstd', 'from_date': start_date+'T00:00', 'to_date': end_date+'T00:00', 'squeeze_dims': True})
+            # dc = zstd.ZstdDecompressor()
+            # ts1 = dc.decompress(ts_r.content).decode()
+            ts1 = tethys.get_results(dataset_id, sites, from_date=start_date, to_date=end_date, squeeze_dims=True)
 
-            return ts1
+            ts1_obj = encode_obj(ts1)
+
+            return ts1_obj
 
 
 
@@ -661,16 +700,18 @@ def display_data(ts_data, sites, dataset_id, start_date, end_date):
     if not dataset_id:
         return base_dict
 
-    ts1 = orjson.loads(ts_data)
+    ts1 = decode_obj(ts_data)
 
-    x1 = ts1['coords']['time']['data']
-    if not isinstance(x1, (list, np.ndarray)):
-        x1 = [x1]
-    data_vars = ts1['data_vars']
-    parameter = [t for t in data_vars if 'dataset_id' in data_vars[t]['attrs']][0]
-    y1 = data_vars[parameter]['data']
-    if not isinstance(y1, (list, np.ndarray)):
-        y1 = [y1]
+    # x1 = ts1['coords']['time']['data']
+    x1 = ts1.time.values
+    # if not isinstance(x1, (list, np.ndarray)):
+    #     x1 = [x1]
+    # data_vars = ts1['data_vars']
+    # data_vars = list(ts1.variables)
+    parameter = [t for t in ts1 if 'dataset_id' in ts1[t].attrs][0]
+    y1 = ts1[parameter].values
+    # if not isinstance(y1, (list, np.ndarray)):
+    #     y1 = [y1]
 
     set1 = go.Scattergl(
             x=x1,
