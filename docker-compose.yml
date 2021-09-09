@@ -61,13 +61,15 @@ services:
   #       - traefik.http.routers.tethys-api-https.tls.certresolver=le
   #       - traefik.http.services.tethys-api.loadbalancer.server.port=80
   wai-vis:
-    image: tethysts/tethys-wai-vis:1.4
+    image: tethysts/tethys-wai-vis:1.5
+    environment:
+      - VARIABLE_NAME=server
     # extra_hosts:
     #   - "host.docker.internal:host-gateway"
     # depends_on:
     #   - "web-service"
     ports:
-      - "8080:80"
+      - "8000:80"
     # # volumes:
     # #   - /var/run/docker.sock:/var/run/docker.sock:ro
     # networks:

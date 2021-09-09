@@ -40,13 +40,14 @@ app = dash.Dash(__name__, server=server,  url_base_pathname = '/')
 # base_url = 'host.docker.internal/tethys/data/'
 # base_url = 'https://api.tethys-ts.xyz/tethys/data/'
 # base_url = 'http://tethys-api-ext:80/tethys/data/'
-
+# tethys = Tethys()
 
 cache_config = {
     # "DEBUG": True,          # some Flask specific configs
     "CACHE_TYPE": "FileSystemCache",  # Flask-Caching related configs
     "CACHE_DEFAULT_TIMEOUT": 60*60,
-    'CACHE_DIR': '/cache'
+    # 'CACHE_DIR': '/cache'
+    'CACHE_DIR': '/media/nvme1/data/UC/wrf'
 }
 
 cache = Cache(server, config=cache_config)
@@ -703,7 +704,7 @@ def display_data(ts_data, sites, dataset_id, start_date, end_date):
     ts1 = decode_obj(ts_data)
 
     # x1 = ts1['coords']['time']['data']
-    x1 = ts1.time.values
+    x1 = pd.to_datetime(ts1.time)
     # if not isinstance(x1, (list, np.ndarray)):
     #     x1 = [x1]
     # data_vars = ts1['data_vars']
@@ -774,15 +775,14 @@ def update_ds_table(dataset_id, datasets):
 def download_csv(n_clicks, ts_data, sites, dataset_id):
     if dataset_id:
         if sites:
-            ts1 = orjson.loads(ts_data)
-            x1 = ts1['coords']['time']['data']
-            data_vars = ts1['data_vars']
-            parameter = [t for t in data_vars if 'dataset_id' in data_vars[t]['attrs']][0]
-            y1 = data_vars[parameter]['data']
+            ts1 = decode_obj(ts_data)
+            x1 = pd.to_datetime(ts1.time)
+            parameter = [t for t in ts1 if 'dataset_id' in ts1[t].attrs][0]
+            y1 = ts1[parameter].values
 
             ts2 = pd.DataFrame({'from_date': x1, parameter: y1})
 
-            ts2['from_date'] = pd.to_datetime(ts2['from_date'])
+            # ts2['from_date'] = pd.to_datetime(ts2['from_date'])
             ts2.set_index('from_date', inplace=True)
 
             return dcc.send_data_frame(ts2.to_csv, "tsdata.csv")
