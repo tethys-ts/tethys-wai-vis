@@ -26,11 +26,11 @@ pd.options.display.max_columns = 10
 
 # external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-# server = flask.Flask(__name__)
-# app = dash.Dash(__name__, server=server,  url_base_pathname = '/')
+server = flask.Flask(__name__)
+app = dash.Dash(__name__, server=server,  url_base_pathname = '/')
 
-app = dash.Dash(__name__,  url_base_pathname = '/')
-server = app.server
+# app = dash.Dash(__name__,  url_base_pathname = '/')
+# server = app.server
 
 ##########################################
 ### Parameters
@@ -801,7 +801,7 @@ def download_csv(n_clicks, ts_data, sites, dataset_id):
 
 
 if __name__ == '__main__':
-    app.run_server(host='0.0.0.0', port=80)
+    server.run(host='0.0.0.0', port=80)
 
 
 # if __name__ == '__main__':
