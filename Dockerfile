@@ -7,7 +7,7 @@ COPY requirements.txt ./
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN apt-get update && apt-get install -y nano
+# RUN apt-get update && apt-get install -y nano
 # Copy hello-cron file to the cron.d directory
 # COPY tethys-cron /etc/cron.d/tethys-cron
 
