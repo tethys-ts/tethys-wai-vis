@@ -247,24 +247,25 @@ def serve_layout():
     html.Div([
         html.P('Click on a station to view the time series data:', style={'display': 'inline-block'}),
         dcc.Graph(
-                id = 'site-map',
-                style={'height': map_height},
-                figure=dict(
-                        data = [dict(
-                                    # lat = init_lat,
-                                    # lon = init_lon,
-                                    # text = init_names,
-                                    type = 'scattermapbox',
-                                    hoverinfo = 'text',
-                                    marker = dict(
-                                            size=8,
-                                            color='black',
-                                            opacity=1
-                                            )
-                                    )
-                                ],
-                        layout=map_layout),
-                config={"displaylogo": False}),
+            id = 'site-map',
+            style={'height': map_height},
+            figure=dict(
+                    data = [dict(
+                                # lat = init_lat,
+                                # lon = init_lon,
+                                # text = init_names,
+                                type = 'scattermapbox',
+                                hoverinfo = 'text',
+                                marker = dict(
+                                        size=8,
+                                        color='black',
+                                        opacity=1
+                                        )
+                                )
+                            ],
+                    layout=map_layout),
+            config={"displaylogo": False}),
+
 
 #         html.A(
 #             'Download Dataset Summary Data',
@@ -291,18 +292,22 @@ def serve_layout():
 
 # 		html.P('Select Dataset for time series plot:', style={'display': 'inline-block'}),
 # 		dcc.Dropdown(options=[{'value:': 5, 'label': init_dataset}], value=5, id='sel_dataset'),
-        dcc.Graph(
-            id = 'selected-data',
-            figure = dict(
-                data = [dict(x=0, y=0)],
-                layout = dict(
-                        paper_bgcolor = '#F4F4F8',
-                        plot_bgcolor = '#F4F4F8',
-                        height = ts_plot_height
-                        )
+        dcc.Loading(
+                id="loading-1",
+                type="default",
+                children=dcc.Graph(
+                            id = 'selected-data',
+                            figure = dict(
+                                data = [dict(x=0, y=0)],
+                                layout = dict(
+                                        paper_bgcolor = '#F4F4F8',
+                                        plot_bgcolor = '#F4F4F8',
+                                        height = ts_plot_height
+                                        )
+                                ),
+                            config={"displaylogo": False}
+                            )
                 ),
-            config={"displaylogo": False}
-            ),
         # html.A(
         #     'Download Time Series Data',
         #     id='download-tsdata',
