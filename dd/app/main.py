@@ -39,8 +39,7 @@ base_url = 'http://tethys-api-ext:80/tethys/data/'
 
 ds_table_cols = {'feature': 'Feature', 'parameter': 'Parameter', 'method': 'Method', 'owner': 'Owner', 'product_code': 'Product Code', 'aggregation_statistic': 'Agg Stat', 'frequency_interval': 'Freq Interval', 'utc_offset': 'UTC Offset'}
 
-ts_plot_height = 600
-map_height = 700
+map_height = 500
 
 lat1 = -43.45
 lon1 = 171.9
@@ -49,6 +48,13 @@ zoom1 = 6
 mapbox_access_token = "pk.eyJ1IjoibXVsbGVua2FtcDEiLCJhIjoiY2pudXE0bXlmMDc3cTNxbnZ0em4xN2M1ZCJ9.sIOtya_qe9RwkYXj5Du1yg"
 
 
+extra_text = """
+## Tethys Dataset Discovery
+
+Included in this application are the public datasets stored in the [Tethys data management system](https://tethysts.readthedocs.io/). The preferred method for accessing the data is through the [Tethys Python package](https://tethysts.readthedocs.io/). The documentation describes the system as well as providing examples for accessing the data. The system and the Python package are currently under heavy development and may (will) contain errors. Please report all issues to the [tethysts Github repo](https://github.com/tethys-ts/tethysts/issues).
+
+Please be aware of the data owner, license, and attribution before using the data in other work.
+"""
 
 
 ###########################################
@@ -305,7 +311,7 @@ def serve_layout():
         sort_action="native",
         sort_mode="multi",
         fixed_rows={'headers': True},
-        style_table={'height': 400},  # defaults to 500
+        style_table={'height': 350},  # defaults to 500
         style_cell={
             'minWidth': '60px', 'maxWidth': '160px',
             'whiteSpace': 'normal'
@@ -379,6 +385,7 @@ def serve_layout():
         # dcc.Download(id="download-dataframe-csv"),
         # html.Button("Download netCDF", id="btn_netcdf"),
         # dcc.Download(id="download-netcdf"),
+        dcc.Markdown(extra_text, id='docs')
     ], className='four columns', style={'margin': 10}),
     dcc.Store(id='datasets_obj', data=encode_obj(requested_datasets)),
     dcc.Store(id='dataset_id', data='')
