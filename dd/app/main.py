@@ -35,12 +35,9 @@ ds_table_cols = {'feature': 'Feature', 'parameter': 'Parameter', 'method': 'Meth
 
 map_height = 500
 
-lat1 = -43.45
-lon1 = 171.9
-zoom1 = 6
-
-mapbox_access_token = "pk.eyJ1IjoibXVsbGVua2FtcDEiLCJhIjoiY2pudXE0bXlmMDc3cTNxbnZ0em4xN2M1ZCJ9.sIOtya_qe9RwkYXj5Du1yg"
-
+lat1 = -41.2
+lon1 = 172.5
+zoom1 = 5
 
 extra_text = """
 ## Tethys Dataset Discovery
@@ -138,18 +135,10 @@ def build_md_ds(dataset):
     return ds3
 
 
-
-
-
-
-
 ###############################################
 ### App layout
 
-map_layout = dict(mapbox = dict(layers = [], accesstoken = mapbox_access_token, style = 'outdoors', center=dict(lat=lat1, lon=lon1), zoom=zoom1), margin = dict(r=0, l=0, t=0, b=0), autosize=True, hovermode='closest', height=map_height)
 
-# @server.route('/wai-vis')
-# def main():
 def serve_layout():
 
     datasets = requests.get(base_url + 'get_datasets').json()
