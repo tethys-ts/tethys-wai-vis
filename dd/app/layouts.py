@@ -24,7 +24,7 @@ map_height = 400
 
 lat1 = -41.2
 lon1 = 172.5
-zoom1 = 5
+zoom1 = 6
 
 extra_text = """
 ## Tethys Dataset Discovery
@@ -177,7 +177,7 @@ def layout1():
                 dl.Map(center=[lat1, lon1], zoom=zoom1, children=[
                         dl.TileLayer(),
                         dl.GeoJSON(data={}, id='extent_map', zoomToBoundsOnClick=True)
-                    ], style={'width': '100%', 'height': 380, 'margin': "auto", "display": "block"}, id="map1"),
+                    ], style={'width': '100%', 'height': 780, 'margin': "auto", "display": "block"}, id="map1"),
                 ]),
             dcc.Tab(label='Station locations', value='stn_loc_tab', id='stn_loc_tab', style=tab_style, selected_style=tab_selected_style, children=[
                 dl.Map(center=[lat1, lon1], zoom=zoom1, children=[
@@ -185,25 +185,28 @@ def layout1():
                         dcc.Loading(id="loading_station_map",  type="default", children=
                             dl.GeoJSON(data={}, id='stn_map', cluster=True, zoomToBoundsOnClick=True)
                         )
-                    ], style={'width': '100%', 'height': 380, 'margin': "auto", "display": "block"}, id="map2")
-                ])
+                    ], style={'width': '100%', 'height': 780, 'margin': "auto", "display": "block"}, id="map2")
+                ]),
+            # dcc.Tab(label='Time series plot', value='ts_tab', id='ts_tab', style=tab_style, selected_style=tab_selected_style, children=[
+            #     dcc.Loading(
+            #         id="loading_1",
+            #         type="default",
+            #         children=dcc.Graph(
+            #             id = 'selected_data',
+            #             figure = dict(
+            #                 data = [dict(x=0, y=0)],
+            #                 layout = dict(
+            #                         paper_bgcolor = '#F4F4F8',
+            #                         plot_bgcolor = '#F4F4F8',
+            #                         height = 400
+            #                         )
+            #                 ),
+            #             config={"displaylogo": False},
+            #             style={'width': '100%', 'height': 780, 'margin': "auto", "display": "block"}
+            #             )
+            #         )
+            #     ])
             ]),
-        dcc.Loading(
-            id="loading_1",
-            type="default",
-            children=dcc.Graph(
-                id = 'selected_data',
-                figure = dict(
-                    data = [dict(x=0, y=0)],
-                    layout = dict(
-                            paper_bgcolor = '#F4F4F8',
-                            plot_bgcolor = '#F4F4F8',
-                            height = 400
-                            )
-                    ),
-                config={"displaylogo": False}
-                )
-            )
     ], className='fourish columns', style={'margin': 10}),
     dcc.Store(id='datasets_obj', data=utils.encode_obj(requested_datasets)),
     dcc.Store(id='filtered_datasets_obj', data=utils.encode_obj(requested_datasets)),
