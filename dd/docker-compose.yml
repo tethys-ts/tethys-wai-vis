@@ -61,7 +61,7 @@ services:
   #       - traefik.http.routers.tethys-api-https.tls.certresolver=le
   #       - traefik.http.services.tethys-api.loadbalancer.server.port=80
   wai-vis:
-    image: tethysts/tethys-wai-vis-dd:1.0
+    image: tethysts/tethys-wai-vis-dd:1.1
     environment:
       - VARIABLE_NAME=server
     # extra_hosts:
