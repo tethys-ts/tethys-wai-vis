@@ -215,6 +215,7 @@ def layout1():
     dcc.Store(id='filtered_datasets_obj', data=utils.encode_obj(requested_datasets)),
     dcc.Store(id='dataset_id', data=''),
     dcc.Store(id='station_id', data=''),
+    dcc.Store(id='stations_obj', data=''),
     dcc.Store(id='station_obj', data=''),
     dcc.Store(id='result_obj', data='')
 ], style={'margin':0})

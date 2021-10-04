@@ -186,20 +186,33 @@ def update_station_id(feature):
 @app.callback(
     Output('stn_meta', 'children'),
     [Input('station_id', 'data')],
-    [State('station_obj', 'data')])
-def update_stn_meta(stn_id, station_obj):
+    [State('stations_obj', 'data')])
+def update_stn_obj(stn_id, stations_obj):
     """
 
     """
     if len(stn_id) > 1:
-        stns = utils.decode_obj(station_obj)
+        stns = utils.decode_obj(stations_obj)
         stn = [d for d in stns if d['station_id'] == stn_id][0]
-        # [dataset.pop(d) for d in ['extent', 'properties'] if d in dataset]
+        data = utils.encode_obj(stn)
+
+    else:
+        data = ''
+
+    return data
+
+
+@app.callback(
+    Output('stn_meta', 'children'),
+    [Input('station_obj', 'data')])
+def update_stn_meta(station_obj):
+    """
+
+    """
+    if len(station_obj) > 1:
+        stn = utils.decode_obj(station_obj)
 
         text = utils.build_md_ds(stn)
-
-        # text = orjson.dumps(dataset, option=orjson.OPT_INDENT_2).decode()
-        # text = pprint.pformat(dataset, 2)
     else:
         text = 'Click on a station on the map'
 
@@ -208,14 +221,16 @@ def update_stn_meta(stn_id, station_obj):
 
 @app.callback(
     Output('result_obj', 'data'),
-    [Input('station_id', 'data')],
+    [Input('station_obj', 'data')],
     [State('dataset_id', 'data')])
-def update_result_obj(stn_id, ds_id):
+def update_result_obj(station_obj, ds_id):
     """
 
     """
-    if (len(ds_id) > 1) and (len(stn_id) > 1):
-        res = utils.get_results(utils.base_url, ds_id, stn_id)
+    if (len(ds_id) > 1) and (len(station_obj) > 1):
+        stn = utils.decode_obj(station_obj)
+        from_date, to_date = utils.stn_date_range(stn)
+        res = utils.get_results(utils.base_url, ds_id, stn['station_id'], from_date, to_date)
 
         res_obj = utils.encode_obj(res)
     else:

@@ -9,7 +9,7 @@ version: '3.3'
 
 services:
   wai-vis:
-    image: tethysts/tethys-wai-vis-dd:1.1
+    image: tethysts/tethys-wai-vis-dd:1.2
     # environment:
     #   - VARIABLE_NAME=server
     # extra_hosts:

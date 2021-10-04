@@ -124,11 +124,18 @@ def get_stations(base_url, dataset_id):
     return fn_stns
 
 
-def get_results(base_url, dataset_id, station_id):
+def get_results(base_url, dataset_id, station_id, from_date=None, to_date=None):
     """
 
     """
-    resp_fn_results = requests.get(base_url + 'get_results', params={'dataset_id': dataset_id, 'compression': 'zstd', 'station_id': station_id})
+    params = {'dataset_id': dataset_id, 'compression': 'zstd', 'station_id': station_id}
+
+    if from_date is not None:
+        params['from_date'] = pd.Timestamp(from_date).isoformat()
+    if to_date is not None:
+        params['to_date'] = pd.Timestamp(to_date).isoformat()
+
+    resp_fn_results = requests.get(base_url + 'get_results', params=params)
 
     if not resp_fn_results.ok:
         raise ValueError(resp_fn_results.raise_for_status())
@@ -157,6 +164,50 @@ def stns_to_geojson(stns):
         gj['features'].append(sgj)
 
     return gj
+
+
+def stn_date_range(stn, freq='365D'):
+    """
+
+    """
+    from_date = pd.Timestamp(stn['time_range']['from_date'])
+    to_date = pd.Timestamp(stn['time_range']['to_date'])
+    to_date1 = to_date.ceil('D')
+
+    from_date1 = (to_date1 - pd.Timedelta(freq))
+
+    if from_date1 < from_date:
+        from_date1 = from_date.ceil('D')
+
+    return from_date1, to_date1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
