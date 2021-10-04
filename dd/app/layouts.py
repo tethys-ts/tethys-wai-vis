@@ -187,25 +187,25 @@ def layout1():
                         )
                     ], style={'width': '100%', 'height': 780, 'margin': "auto", "display": "block"}, id="map2")
                 ]),
-            # dcc.Tab(label='Time series plot', value='ts_tab', id='ts_tab', style=tab_style, selected_style=tab_selected_style, children=[
-            #     dcc.Loading(
-            #         id="loading_1",
-            #         type="default",
-            #         children=dcc.Graph(
-            #             id = 'selected_data',
-            #             figure = dict(
-            #                 data = [dict(x=0, y=0)],
-            #                 layout = dict(
-            #                         paper_bgcolor = '#F4F4F8',
-            #                         plot_bgcolor = '#F4F4F8',
-            #                         height = 400
-            #                         )
-            #                 ),
-            #             config={"displaylogo": False},
-            #             style={'width': '100%', 'height': 780, 'margin': "auto", "display": "block"}
-            #             )
-            #         )
-            #     ])
+            dcc.Tab(label='Time series plot', value='ts_tab', id='ts_tab', style=tab_style, selected_style=tab_selected_style, children=[
+                dcc.Loading(
+                    id="loading_1",
+                    type="default",
+                    children=dcc.Graph(
+                        id = 'selected_data',
+                        figure = dict(
+                            data = [dict(x=0, y=0)],
+                            layout = dict(
+                                    paper_bgcolor = '#F4F4F8',
+                                    plot_bgcolor = '#F4F4F8',
+                                    height = 400
+                                    )
+                            ),
+                        config={"displaylogo": False},
+                        style={'width': '100%', 'height': 780, 'margin': "auto", "display": "block"}
+                        )
+                    )
+                ])
             ]),
     ], className='fourish columns', style={'margin': 10}),
     dcc.Store(id='datasets_obj', data=utils.encode_obj(requested_datasets)),

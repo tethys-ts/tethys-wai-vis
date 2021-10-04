@@ -8,60 +8,8 @@ version: '3.3'
 #     external: true
 
 services:
-  # db:
-  #   image: mongo:4.2-bionic
-  #   deploy:
-  #     placement:
-  #       constraints:
-  #         - node.role == manager
-  #   command: --wiredTigerJournalCompressor zstd --wiredTigerCollectionBlockCompressor zstd
-  #   networks:
-  #     - net
-  #   # ports:
-  #   #   - "27017:27017"
-  # db-init:
-  #   image: tethysts/tethys-db-initialize:dev
-  #   deploy:
-  #     restart_policy:
-  #       condition: none
-  #     placement:
-  #       constraints:
-  #         - node.role == manager
-  #   networks:
-  #     - net
-  #   # volumes:
-  #   #     - "~/git/tethys/tethys-web-service/parameters.yml:/parameters.yml"
-  #   depends_on:
-  #     - "db"
-  # web-service:
-  #   image: tethysts/tethys-web-service:dev
-  #   depends_on:
-  #     - "db"
-  #   # ports:
-  #   #   - "80:80"
-  #   # volumes:
-  #   #   - /var/run/docker.sock:/var/run/docker.sock:ro
-  #   networks:
-  #     - net
-  #     - traefik-public
-  #   deploy:
-  #     placement:
-  #       constraints:
-  #         - node.role == manager
-  #     labels:
-  #       - traefik.enable=true
-  #       - traefik.docker.network=traefik-public
-  #       - traefik.constraint-label=traefik-public
-  #       - traefik.http.routers.tethys-api-http.rule=Host(`${DOMAIN1?Variable not set}`)
-  #       - traefik.http.routers.tethys-api-http.entrypoints=http
-  #       - traefik.http.routers.tethys-api-http.middlewares=https-redirect
-  #       - traefik.http.routers.tethys-api-https.rule=Host(`${DOMAIN1?Variable not set}`)
-  #       - traefik.http.routers.tethys-api-https.entrypoints=https
-  #       - traefik.http.routers.tethys-api-https.tls=true
-  #       - traefik.http.routers.tethys-api-https.tls.certresolver=le
-  #       - traefik.http.services.tethys-api.loadbalancer.server.port=80
   wai-vis:
-    image: tethysts/tethys-wai-vis-dd:1.1
+    image: tethysts/tethys-wai-vis-dd:1.2
     environment:
       - VARIABLE_NAME=server
     # extra_hosts:
