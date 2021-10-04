@@ -206,112 +206,112 @@ def update_stn_meta(stn_id, station_obj):
     return text
 
 
-# @app.callback(
-#     Output('result_obj', 'data'),
-#     [Input('station_id', 'data')],
-#     [State('dataset_id', 'data')])
-# def update_result_obj(stn_id, ds_id):
-#     """
+@app.callback(
+    Output('result_obj', 'data'),
+    [Input('station_id', 'data')],
+    [State('dataset_id', 'data')])
+def update_result_obj(stn_id, ds_id):
+    """
 
-#     """
-#     if (len(ds_id) > 1) and (len(stn_id) > 1):
-#         res = utils.get_results(utils.base_url, ds_id, stn_id)
+    """
+    if (len(ds_id) > 1) and (len(stn_id) > 1):
+        res = utils.get_results(utils.base_url, ds_id, stn_id)
 
-#         res_obj = utils.encode_obj(res)
-#     else:
-#         res_obj = ''
+        res_obj = utils.encode_obj(res)
+    else:
+        res_obj = ''
 
-#     return res_obj
+    return res_obj
 
 
-# @app.callback(
-#     Output('selected_data', 'figure'),
-#     [Input('result_obj', 'data')]
-#     )
-# def update_results_plot(result_obj):
-#     """
+@app.callback(
+    Output('selected_data', 'figure'),
+    [Input('result_obj', 'data')]
+    )
+def update_results_plot(result_obj):
+    """
 
-#     """
-#     base_dict = dict(
-#             data = [dict(x=0, y=0)],
-#             layout = dict(
-#                 title='Click on the map to select a station',
-#                 paper_bgcolor = '#F4F4F8',
-#                 plot_bgcolor = '#F4F4F8',
-#                 height = 400
-#                 )
-#             )
+    """
+    base_dict = dict(
+            data = [dict(x=0, y=0)],
+            layout = dict(
+                title='Click on the map to select a station',
+                paper_bgcolor = '#F4F4F8',
+                plot_bgcolor = '#F4F4F8',
+                height = 400
+                )
+            )
 
-#     if len(result_obj) > 1:
-#         results = utils.decode_obj(result_obj)
-#         vars1 = list(results.variables)
-#         parameter = [v for v in vars1 if 'dataset_id' in results[v].attrs][0]
+    if len(result_obj) > 1:
+        results = utils.decode_obj(result_obj)
+        vars1 = list(results.variables)
+        parameter = [v for v in vars1 if 'dataset_id' in results[v].attrs][0]
 
-#         results1 = results.isel(height=0, drop=True)
+        results1 = results.isel(height=0, drop=True)
 
-#         fig = go.Figure()
+        fig = go.Figure()
 
-#         if 'geometry' in results.dims:
-#             grps = results1.groupby('geometry')
+        if 'geometry' in results.dims:
+            grps = results1.groupby('geometry')
 
-#             for geo, grp in grps:
-#                 if 'name' in grp:
-#                     name = str(grp['name'].values)
-#                 elif 'ref' in grp:
-#                     name = str(grp['ref'].values)
-#                 else:
-#                     name=None
+            for geo, grp in grps:
+                if 'name' in grp:
+                    name = str(grp['name'].values)
+                elif 'ref' in grp:
+                    name = str(grp['ref'].values)
+                else:
+                    name=None
 
-#                 times = pd.to_datetime(grp['time'].values)
+                times = pd.to_datetime(grp['time'].values)
 
-#                 fig.add_trace(go.Scattergl(
-#                     x=times,
-#                     y=grp[parameter].values,
-#                     showlegend=True,
-#                     name=name,
-#         #                line={'color': col3[s]},
-#                     opacity=0.8))
-#         else:
-#             results2 = results1[parameter].isel(lat=0, lon=0, drop=True)
+                fig.add_trace(go.Scattergl(
+                    x=times,
+                    y=grp[parameter].values,
+                    showlegend=True,
+                    name=name,
+        #                line={'color': col3[s]},
+                    opacity=0.8))
+        else:
+            results2 = results1[parameter].isel(lat=0, lon=0, drop=True)
 
-#             times = pd.to_datetime(results2['time'].values)
+            times = pd.to_datetime(results2['time'].values)
 
-#             fig.add_trace(go.Scattergl(
-#                 x=times,
-#                 y=results2.values,
-#                 showlegend=True,
-#                 # name=name,
-#     #                line={'color': col3[s]},
-#                 opacity=0.8))
+            fig.add_trace(go.Scattergl(
+                x=times,
+                y=results2.values,
+                showlegend=True,
+                # name=name,
+    #                line={'color': col3[s]},
+                opacity=0.8))
 
-#         to_date = times.max()
-#         from_date = to_date - pd.DateOffset(months=6)
+        to_date = times.max()
+        from_date = to_date - pd.DateOffset(months=6)
 
-#         layout = dict(paper_bgcolor = '#F4F4F8', plot_bgcolor = '#F4F4F8', showlegend=True, height=780, legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01), margin=dict(l=20, r=20, t=20, b=20))
+        layout = dict(paper_bgcolor = '#F4F4F8', plot_bgcolor = '#F4F4F8', showlegend=True, height=780, legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01), margin=dict(l=20, r=20, t=20, b=20))
 
-#         fig.update_layout(**layout)
-#         fig.update_xaxes(
-#             type='date',
-#             range=[from_date.date(), to_date.date()],
-#             rangeslider=dict(visible=True, autorange=False),
-#             # rangeslider_range=[from_date, to_date],
-#             # rangeslider_visible=True,
-#             rangeselector=dict(
-#                 buttons=list([
-#                     dict(step="all"),
-#                     dict(count=1, label="1y", step="year", stepmode="backward"),
-#                     dict(count=6, label="6m", step="month", stepmode="backward"),
-#                     dict(count=1, label="1m", step="month", stepmode="backward")
-#                     ])
-#                 )
-#             )
+        fig.update_layout(**layout)
+        fig.update_xaxes(
+            type='date',
+            range=[from_date.date(), to_date.date()],
+            rangeslider=dict(visible=True, autorange=False),
+            # rangeslider_range=[from_date, to_date],
+            # rangeslider_visible=True,
+            rangeselector=dict(
+                buttons=list([
+                    dict(step="all"),
+                    dict(count=1, label="1y", step="year", stepmode="backward"),
+                    dict(count=6, label="6m", step="month", stepmode="backward"),
+                    dict(count=1, label="1m", step="month", stepmode="backward")
+                    ])
+                )
+            )
 
-#         fig.update_yaxes(autorange = True, fixedrange= False)
+        fig.update_yaxes(autorange = True, fixedrange= False)
 
-#     else:
-#         fig = base_dict
+    else:
+        fig = base_dict
 
-#     return fig
+    return fig
 
 
 

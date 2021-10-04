@@ -173,23 +173,26 @@ def layout1():
 
     html.Div([
         dcc.Tabs(id='map_tabs', value='extent_tab', style=tabs_styles, children=[
-            dcc.Tab(label='Dataset Extent', value='extent_tab', id='extent_tab', style=tab_style, selected_style=tab_selected_style, children=[
+            dcc.Tab(label='Dataset extent', value='extent_tab', id='extent_tab', style=tab_style, selected_style=tab_selected_style, children=[
                 dl.Map(center=[lat1, lon1], zoom=zoom1, children=[
                         dl.TileLayer(),
                         dl.GeoJSON(data={}, id='extent_map', zoomToBoundsOnClick=True)
                     ], style={'width': '100%', 'height': 780, 'margin': "auto", "display": "block"}, id="map1"),
                 ]),
             dcc.Tab(label='Station locations', value='stn_loc_tab', id='stn_loc_tab', style=tab_style, selected_style=tab_selected_style, children=[
-                dl.Map(center=[lat1, lon1], zoom=zoom1, children=[
-                        dl.TileLayer(),
-                        dcc.Loading(id="loading_station_map",  type="default", children=
-                            dl.GeoJSON(data={}, id='stn_map', cluster=True, zoomToBoundsOnClick=True)
+                dcc.Loading(
+                    id="loading_1",
+                    type="default",
+                    children=
+                        dl.Map(center=[lat1, lon1], zoom=zoom1, children=[
+                                dl.TileLayer(),
+                                dl.GeoJSON(data={}, id='stn_map', cluster=True, zoomToBoundsOnClick=True)
+                            ], style={'width': '100%', 'height': 780, 'margin': "auto", "display": "block"}, id="map2")
                         )
-                    ], style={'width': '100%', 'height': 780, 'margin': "auto", "display": "block"}, id="map2")
                 ]),
             dcc.Tab(label='Time series plot', value='ts_tab', id='ts_tab', style=tab_style, selected_style=tab_selected_style, children=[
                 dcc.Loading(
-                    id="loading_1",
+                    id="loading_2",
                     type="default",
                     children=dcc.Graph(
                         id = 'selected_data',
