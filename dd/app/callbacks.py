@@ -127,7 +127,7 @@ def update_map_extent(ds_id, datasets_obj):
 
 
 @app.callback(
-    Output('station_obj', 'data'),
+    Output('stations_obj', 'data'),
     [Input('dataset_id', 'data')]
     )
 def update_station_obj(ds_id):
@@ -146,7 +146,7 @@ def update_station_obj(ds_id):
 
 @app.callback(
     Output('stn_map', 'data'),
-    [Input('station_obj', 'data')]
+    [Input('stations_obj', 'data')]
     )
 def update_stations_map(station_obj):
     """
@@ -184,7 +184,7 @@ def update_station_id(feature):
 
 
 @app.callback(
-    Output('stn_meta', 'children'),
+    Output('station_obj', 'data'),
     [Input('station_id', 'data')],
     [State('stations_obj', 'data')])
 def update_stn_obj(stn_id, stations_obj):
@@ -294,29 +294,30 @@ def update_results_plot(result_obj):
             fig.add_trace(go.Scattergl(
                 x=times,
                 y=results2.values,
-                showlegend=True,
+                showlegend=False,
                 # name=name,
     #                line={'color': col3[s]},
                 opacity=0.8))
 
-        to_date = times.max()
-        from_date = to_date - pd.DateOffset(months=6)
+        # to_date = times.max()
+        # from_date = to_date - pd.DateOffset(months=6)
 
         layout = dict(paper_bgcolor = '#F4F4F8', plot_bgcolor = '#F4F4F8', showlegend=True, height=780, legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01), margin=dict(l=20, r=20, t=20, b=20))
 
         fig.update_layout(**layout)
         fig.update_xaxes(
             type='date',
-            range=[from_date.date(), to_date.date()],
-            rangeslider=dict(visible=True, autorange=False),
+            # range=[from_date.date(), to_date.date()],
+            # rangeslider=dict(visible=True),
             # rangeslider_range=[from_date, to_date],
             # rangeslider_visible=True,
             rangeselector=dict(
                 buttons=list([
-                    dict(step="all"),
-                    dict(count=1, label="1y", step="year", stepmode="backward"),
+                    dict(step="all", label='1y'),
+                    # dict(count=1, label="1 year", step="year", stepmode="backward"),
                     dict(count=6, label="6m", step="month", stepmode="backward"),
-                    dict(count=1, label="1m", step="month", stepmode="backward")
+                    dict(count=1, label="1m", step="month", stepmode="backward"),
+                    dict(count=7, label="7d", step="day", stepmode="backward")
                     ])
                 )
             )
