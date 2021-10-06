@@ -12,6 +12,7 @@ import pandas as pd
 import requests
 import xarray as xr
 import orjson
+from shapely.geometry import shape, mapping
 
 #####################################
 ### Parameters
@@ -155,12 +156,18 @@ def stns_to_geojson(stns):
     """
     gj = {'type': 'FeatureCollection', 'features': []}
     for s in stns:
-        if 'name' in s:
-            sgj = {'type': 'Feature', 'geometry': s['geometry'], 'properties': {'name': s['station_id'], 'tooltip': s['name']}}
-        elif 'ref' in s:
-            sgj = {'type': 'Feature', 'geometry': s['geometry'], 'properties': {'name': s['station_id'], 'tooltip': s['ref']}}
+        if s['geometry']['type'] in ['Polygon', 'LineString']:
+            geo1 = shape(s['geometry'])
+            geo2 = mapping(geo1.centroid)
         else:
-            sgj = {'type': 'Feature', 'geometry': s['geometry'], 'properties': {'name': s['station_id']}}
+            geo2 = s['geometry']
+
+        if 'name' in s:
+            sgj = {'type': 'Feature', 'geometry': geo2, 'properties': {'name': s['station_id'], 'tooltip': s['name']}}
+        elif 'ref' in s:
+            sgj = {'type': 'Feature', 'geometry': geo2, 'properties': {'name': s['station_id'], 'tooltip': s['ref']}}
+        else:
+            sgj = {'type': 'Feature', 'geometry': geo2, 'properties': {'name': s['station_id']}}
         gj['features'].append(sgj)
 
     return gj

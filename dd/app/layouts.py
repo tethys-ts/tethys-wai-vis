@@ -51,6 +51,8 @@ tab_selected_style = {
     'padding': '5px'
 }
 
+attribution = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+
 
 ###############################################
 ### App layout
@@ -175,7 +177,7 @@ def layout1():
         dcc.Tabs(id='map_tabs', value='extent_tab', style=tabs_styles, children=[
             dcc.Tab(label='Dataset extent', value='extent_tab', id='extent_tab', style=tab_style, selected_style=tab_selected_style, children=[
                 dl.Map(center=[lat1, lon1], zoom=zoom1, children=[
-                        dl.TileLayer(),
+                        dl.TileLayer(attribution=attribution),
                         dl.GeoJSON(data={}, id='extent_map', zoomToBoundsOnClick=True)
                     ], style={'width': '100%', 'height': 780, 'margin': "auto", "display": "block"}, id="map1"),
                 ]),
@@ -185,8 +187,9 @@ def layout1():
                     type="default",
                     children=
                         dl.Map(center=[lat1, lon1], zoom=zoom1, children=[
-                                dl.TileLayer(),
+                                dl.TileLayer(id='tile_layer', attribution=attribution),
                                 dl.GeoJSON(data={}, id='stn_map', cluster=True, zoomToBoundsOnClick=True)
+                                # dl.GeoJSON(data={}, id='stn_map')
                             ], style={'width': '100%', 'height': 780, 'margin': "auto", "display": "block"}, id="map2")
                         )
                 ]),
