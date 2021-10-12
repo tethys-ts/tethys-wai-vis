@@ -8,7 +8,7 @@ networks:
     external: true
 
 services:
-  wai-vis-dd:
+  wai-vis:
     image: tethysts/tethys-wai-vis-dd:1.3
     environment:
       - VARIABLE_NAME=server
