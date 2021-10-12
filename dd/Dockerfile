@@ -1,5 +1,6 @@
-FROM tiangolo/uwsgi-nginx-flask:python3.8
+# FROM tiangolo/uwsgi-nginx-flask:python3.8
 # FROM tiangolo/meinheld-gunicorn-flask:python3.8
+FROM python:3.8-slim
 
 # RUN apt-get update && apt-get install -y libspatialindex-dev python-rtree
 
@@ -19,3 +20,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # RUN crontab /etc/cron.d/tethys-cron
 
 COPY ./app /app
+
+CMD ["uvicorn", "app.main:server", "--proxy-headers", "--host", "0.0.0.0", "--port", "80"]
