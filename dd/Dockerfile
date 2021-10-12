@@ -21,4 +21,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./app /app
 
-CMD ["uvicorn", "app.main:server", "--proxy-headers", "--host", "0.0.0.0", "--port", "80"]
+# CMD ["uvicorn", "app.main:server", "--proxy-headers", "--host", "0.0.0.0", "--port", "80"]
+CMD ["gunicorn", "--conf", "app/gunicorn_conf.py", "--bind", "0.0.0.0:80", "app.main:server"]

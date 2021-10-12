@@ -9,8 +9,8 @@ from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 import pandas as pd
 
-from app import app
-import utils
+from .app import app
+from . import utils
 
 
 ################################################
@@ -328,52 +328,3 @@ def update_results_plot(result_obj):
         fig = base_dict
 
     return fig
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

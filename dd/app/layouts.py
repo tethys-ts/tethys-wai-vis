@@ -15,7 +15,7 @@ import dash_leaflet as dl
 import dash_leaflet.express as dlx
 import copy
 
-import utils
+from . import utils
 
 ##########################################
 ### Parameters
@@ -224,4 +224,3 @@ def layout1():
 ], style={'margin':0})
 
     return layout
-

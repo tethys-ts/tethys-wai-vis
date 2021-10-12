@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from app import app, server
-from layouts import layout1
-import callbacks
+from .app import app, server
+from .layouts import layout1
+from . import callbacks
 
 ##########################################
 ### Parameters
