@@ -1,12 +1,12 @@
 # FROM tiangolo/uwsgi-nginx-flask:python3.8
 # FROM tiangolo/meinheld-gunicorn-flask:python3.8
-FROM python:3.8-slim
+FROM tethysts/tethys-dash-base:1.0
 
 # RUN apt-get update && apt-get install -y libspatialindex-dev python-rtree
 
-COPY requirements.txt ./
+# COPY requirements.txt ./
 
-RUN pip install --no-cache-dir -r requirements.txt
+# RUN pip install --no-cache-dir -r requirements.txt
 
 # RUN apt-get update && apt-get install -y nano
 # Copy hello-cron file to the cron.d directory

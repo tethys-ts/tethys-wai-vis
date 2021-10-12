@@ -10,8 +10,8 @@ networks:
 services:
   wai-vis:
     image: tethysts/tethys-wai-vis-dd:1.4
-    environment:
-      - VARIABLE_NAME=server
+    # environment:
+    #   - VARIABLE_NAME=server
     # extra_hosts:
     #   - "host.docker.internal:host-gateway"
     # depends_on:
