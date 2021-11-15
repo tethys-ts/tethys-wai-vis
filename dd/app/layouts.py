@@ -16,6 +16,7 @@ import dash_leaflet.express as dlx
 import copy
 
 from . import utils
+# import utils
 
 ##########################################
 ### Parameters
@@ -167,6 +168,10 @@ def layout1():
                 dcc.Tab(label='Station data', value='stn_tab', id='stn_tab', style=tab_style, selected_style=tab_selected_style, children=[
                     dcc.Markdown('Click on a station on the map', id='stn_meta', style={"overflow-y": "scroll", 'height': 400})
                     # style={"whitespace": "pre", "overflow-x": "scroll"}
+                    ]),
+                dcc.Tab(label='Results summary', value='res_tab', id='res_tab', style=tab_style, selected_style=tab_selected_style, children=[
+                    dcc.Markdown('Click on a station on the map', id='res_meta', style={"overflow-y": "scroll", 'height': 400})
+                    # style={"whitespace": "pre", "overflow-x": "scroll"}
                     ])
                 ])
             ])
@@ -193,7 +198,7 @@ def layout1():
                             ], style={'width': '100%', 'height': 780, 'margin': "auto", "display": "block"}, id="map2")
                         )
                 ]),
-            dcc.Tab(label='Time series plot', value='ts_tab', id='ts_tab', style=tab_style, selected_style=tab_selected_style, children=[
+            dcc.Tab(label='Results plot', value='ts_tab', id='ts_tab', style=tab_style, selected_style=tab_selected_style, children=[
                 dcc.Loading(
                     id="loading_2",
                     type="default",

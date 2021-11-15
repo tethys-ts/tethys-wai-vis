@@ -12,6 +12,8 @@ import pandas as pd
 from .app import app
 from . import utils
 
+# from app import app
+# import utils
 
 ################################################
 ### Callbacks
@@ -213,6 +215,34 @@ def update_stn_meta(station_obj):
         stn = utils.decode_obj(station_obj)
 
         text = utils.build_md_ds(stn)
+    else:
+        text = 'Click on a station on the map'
+
+    return text
+
+
+@app.callback(
+    Output('res_meta', 'children'),
+    [Input('result_obj', 'data')])
+def update_results_summ(result_obj):
+    """
+
+    """
+    if len(result_obj) > 1:
+        results = utils.decode_obj(result_obj)
+
+        text = results.__repr__()
+        # text = text.replace('\n', '\n\n')
+        text = text.replace('<xarray.Dataset>', '')
+        text = text.replace('\nDimensions', '\n**Dimensions**')
+        text = text.replace('\nCoordinates:\n', '\n\n**Coordinates**:\n\n')
+        text = text.replace('\nData variables:\n', '\n\n**Data variables**:\n\n')
+        text = text.replace('\nAttributes:\n', '\n\n**Attributes**:\n\n')
+#         text = '''
+#         # This is an <h1> tag
+#         ## This is an <h2> tag
+#         ###### This is an <h6> tag
+# '''
     else:
         text = 'Click on a station on the map'
 
