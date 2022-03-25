@@ -1,6 +1,6 @@
 # FROM tiangolo/uwsgi-nginx-flask:python3.8
 # FROM tiangolo/meinheld-gunicorn-flask:python3.8
-FROM tethysts/tethys-dash-base:1.0
+FROM tethysts/tethys-dash-base:1.1
 
 # RUN apt-get update && apt-get install -y libspatialindex-dev python-rtree
 

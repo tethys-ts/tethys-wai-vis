@@ -19,8 +19,8 @@ from shapely.geometry import shape, mapping
 
 ds_table_cols = {'feature': 'Feature', 'parameter': 'Parameter', 'method': 'Method', 'owner': 'Owner', 'product_code': 'Product Code', 'aggregation_statistic': 'Agg Stat', 'frequency_interval': 'Freq Interval', 'utc_offset': 'UTC Offset'}
 
-# base_url = 'https://api.tethys-ts.xyz/tethys/data/'
-base_url = 'http://tethys-api-ext:80/tethys/data/'
+# base_url = 'https://api-int.tethys-ts.xyz/tethys/data/'
+base_url = 'http://tethys-api-int:80/tethys/data/'
 
 #####################################
 ### Functions
@@ -187,38 +187,3 @@ def stn_date_range(stn, freq='365D'):
         from_date1 = from_date.ceil('D')
 
     return from_date1, to_date1
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
