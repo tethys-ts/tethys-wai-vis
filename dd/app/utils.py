@@ -21,6 +21,8 @@ ds_table_cols = {'feature': 'Feature', 'parameter': 'Parameter', 'method': 'Meth
 
 # base_url = 'https://api-int.tethys-ts.xyz/tethys/data/'
 base_url = 'http://tethys-api-int:80/tethys/data/'
+# base_url = 'http://tethys-api-ext:80/tethys/data/'
+
 
 #####################################
 ### Functions
