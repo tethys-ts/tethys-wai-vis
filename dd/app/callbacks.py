@@ -260,7 +260,12 @@ def update_result_obj(station_obj, ds_id):
     if (len(ds_id) > 1) and (len(station_obj) > 1):
         stn = utils.decode_obj(station_obj)
         from_date, to_date = utils.stn_date_range(stn)
-        res = utils.get_results(utils.base_url, ds_id, stn['station_id'], from_date, to_date)
+
+        if 'heights' in stn:
+            heights = stn['heights']
+            res = utils.get_results(utils.base_url, ds_id, stn['station_id'], from_date, to_date, [heights[0]])
+        else:
+            res = utils.get_results(utils.base_url, ds_id, stn['station_id'], from_date, to_date)
 
         res_obj = utils.encode_obj(res)
     else:

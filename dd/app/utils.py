@@ -127,11 +127,11 @@ def get_stations(base_url, dataset_id):
     return fn_stns
 
 
-def get_results(base_url, dataset_id, station_id, from_date=None, to_date=None):
+def get_results(base_url, dataset_id, station_id, from_date=None, to_date=None, heights=None):
     """
 
     """
-    params = {'dataset_id': dataset_id, 'compression': 'zstd', 'station_id': station_id}
+    params = {'dataset_id': dataset_id, 'compression': 'zstd', 'station_id': station_id, 'heights': heights}
 
     if from_date is not None:
         params['from_date'] = pd.Timestamp(from_date).isoformat()
