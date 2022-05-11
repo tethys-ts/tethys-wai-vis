@@ -115,14 +115,12 @@ def get_stations(base_url, dataset_id):
     """
 
     """
-    resp_fn_stns = requests.post(base_url + 'get_stations', params={'dataset_id': dataset_id, 'compression': 'zstd'})
+    resp_fn_stns = requests.post(base_url + 'get_stations', params={'dataset_id': dataset_id}, headers={'Accept-Encoding': 'br'})
 
     if not resp_fn_stns.ok:
         raise ValueError(resp_fn_stns.raise_for_status())
 
-    dctx = zstd.ZstdDecompressor()
-
-    fn_stns = orjson.loads(dctx.decompress(resp_fn_stns.content))
+    fn_stns = orjson.loads(resp_fn_stns.content)
 
     return fn_stns
 
@@ -131,21 +129,19 @@ def get_results(base_url, dataset_id, station_id, from_date=None, to_date=None, 
     """
 
     """
-    params = {'dataset_id': dataset_id, 'compression': 'zstd', 'station_id': station_id, 'heights': heights}
+    params = {'dataset_id': dataset_id, 'station_id': station_id, 'heights': heights}
 
     if from_date is not None:
         params['from_date'] = pd.Timestamp(from_date).isoformat()
     if to_date is not None:
         params['to_date'] = pd.Timestamp(to_date).isoformat()
 
-    resp_fn_results = requests.get(base_url + 'get_results', params=params)
+    resp_fn_results = requests.get(base_url + 'get_results', params=params, headers={'Accept-Encoding': 'br'})
 
     if not resp_fn_results.ok:
         raise ValueError(resp_fn_results.raise_for_status())
 
-    dctx = zstd.ZstdDecompressor()
-
-    fn_results = orjson.loads(dctx.decompress(resp_fn_results.content))
+    fn_results = orjson.loads(resp_fn_results.content)
 
     data2 = xr.Dataset.from_dict(fn_results)
 

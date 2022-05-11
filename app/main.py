@@ -549,10 +549,9 @@ def update_summ_data(dataset_id, start_date, end_date):
         print('No new sites_summ')
     else:
         # tethys = decode_obj(tethys_obj)
-        summ_r = requests.post(base_url + 'get_stations', params={'dataset_id': dataset_id, 'compression': 'zstd'})
+        summ_r = requests.post(base_url + 'get_stations', params={'dataset_id': dataset_id}, headers={'Accept-Encoding': 'br'})
 
-        dc = zstd.ZstdDecompressor()
-        summ_data1 = orjson.loads(dc.decompress(summ_r.content).decode())
+        summ_data1 = orjson.loads(summ_r.content)
 
         # summ_data1 = tethys.get_stations(dataset_id)
 
@@ -671,9 +670,8 @@ def get_data(sites, start_date, end_date, dataset_id):
     if dataset_id:
         if sites:
             # tethys = decode_obj(tethys_obj)
-            ts_r = requests.get(base_url + 'get_results', params={'dataset_id': dataset_id, 'station_id': sites, 'compression': 'zstd', 'from_date': start_date+'T00:00', 'to_date': end_date+'T00:00', 'squeeze_dims': True})
-            dc = zstd.ZstdDecompressor()
-            ts1 = xr.Dataset.from_dict(orjson.loads(dc.decompress(ts_r.content).decode()))
+            ts_r = requests.get(base_url + 'get_results', params={'dataset_id': dataset_id, 'station_id': sites, 'from_date': start_date+'T00:00', 'to_date': end_date+'T00:00', 'squeeze_dims': True}, headers={'Accept-Encoding': 'br'})
+            ts1 = xr.Dataset.from_dict(orjson.loads(ts_r.content))
             # ts1 = tethys.get_results(dataset_id, sites, from_date=start_date, to_date=end_date, squeeze_dims=True)
 
             ts1_obj = encode_obj(ts1)

@@ -9,7 +9,7 @@ networks:
 
 services:
   wai-vis:
-    image: tethysts/tethys-wai-vis-dd:1.7
+    image: tethysts/tethys-wai-vis-dd:1.8
     # environment:
     #   - VARIABLE_NAME=server
     # extra_hosts:
