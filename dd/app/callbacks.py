@@ -307,17 +307,20 @@ def update_results_plot(result_obj):
             for geo, grp in grps:
                 if 'name' in grp:
                     name = str(grp['name'].values)
+                    showlegend = True
                 elif 'ref' in grp:
                     name = str(grp['ref'].values)
+                    showlegend = True
                 else:
-                    name=None
+                    name = None
+                    showlegend = False
 
                 times = pd.to_datetime(grp['time'].values)
 
                 fig.add_trace(go.Scattergl(
                     x=times,
                     y=grp[parameter].values,
-                    showlegend=True,
+                    showlegend=showlegend,
                     name=name,
         #                line={'color': col3[s]},
                     opacity=0.8))
